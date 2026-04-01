@@ -206,6 +206,22 @@ TIMELINE_COLORS = {
     'etf': 'rgba(203,213,225,0.4)',     # soft light
 }
 
+# Quadrant colors (matching build_market_regimes.py)
+Q_COLORS = {
+    'Q1': '#60a5fa', 'Q2': '#c084fc', 'Q3': '#67e8f9', 'Q4': '#f9a8d4',
+}
+
+with open(os.path.join(DATA, 'regimes.json')) as f:
+    _regimes_data = json.load(f)
+_us_regimes = _regimes_data['us']
+_eu_regimes = _regimes_data['eu']
+
+def _year_to_q(yr, region):
+    r = _us_regimes if region == 'us' else _eu_regimes
+    d = r.get(str(yr))
+    return d['q'] if d else 'Q1'
+
+
 def build_timeline(region, comp, vd_color=None):
     tl = TIMELINES.get(region, {}).get(comp, [])
     if not tl:
@@ -284,11 +300,33 @@ def build_timeline(region, comp, vd_color=None):
         '<span><span class="tl-dot" style="background:rgba(239,68,68,0.45)"></span>FAIL</span>'
         '<span><span class="tl-dot tl-dot-active"></span>Active in chain</span>'
         '</div>'
+        '<div class="tl-legend" style="margin-top:0.2rem">'
+        '<span style="color:#64748b;font-size:0.68rem;margin-right:0.3rem">Regimes:</span>'
+        '<span><span class="tl-dot" style="background:#60a5fa;opacity:0.5"></span>Q1</span>'
+        '<span><span class="tl-dot" style="background:#c084fc;opacity:0.5"></span>Q2</span>'
+        '<span><span class="tl-dot" style="background:#67e8f9;opacity:0.5"></span>Q3</span>'
+        '<span><span class="tl-dot" style="background:#f9a8d4;opacity:0.5"></span>Q4</span>'
+        '</div>'
     )
+
+    # Quadrant regime bar
+    q_bars = ''
+    for yr in range(min_yr, max_yr):
+        q = _year_to_q(yr, region)
+        color = Q_COLORS[q]
+        q_bars += ('<div class="tl-bar" style="left:' + str(pct(yr)) + '%;'
+                   'width:' + str(pct(yr + 1) - pct(yr)) + '%;'
+                   'background:' + color + ';opacity:0.35;"'
+                   ' title="' + str(yr) + ': ' + q + '"></div>')
+    regime_row = ('<div class="tl-row">'
+                  '<span class="tl-label" style="font-size:0.65rem">Regime</span>'
+                  '<div class="tl-track">' + q_bars + '</div>'
+                  '</div>')
 
     return (
         '<div class="timeline">'
         + rows
+        + regime_row
         + '<div class="tl-axis">'
         + '<span class="tl-tick" style="left:0%">' + str(min_yr) + '</span>'
         + ticks

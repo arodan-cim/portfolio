@@ -1,0 +1,943 @@
+{
+  "methodology": {
+    "framework": "Bridgewater All Weather 2x2 (Dalio, 2012)",
+    "classification": "Median split on YoY GDP growth and YoY inflation",
+    "us_thresholds": {
+      "gdp_median": 2.91,
+      "cpi_median": 2.92
+    },
+    "eu_thresholds": {
+      "gdp_median": 2.03,
+      "hicp_median": 2.96
+    },
+    "sources": {
+      "us_cpi": "FRED CPIAUCSL (Bureau of Labor Statistics)",
+      "us_gdp": "FRED GDPC1 (Bureau of Economic Analysis)",
+      "eu_cpi_blend": "Average of DE/FR/UK/IT CPI (FRED OECD MEI, 1956-1996)",
+      "eu_hicp": "FRED CP0000EZ19M086NEST (Eurostat, 1996+)",
+      "eu_gdp_blend": "Average of DE/FR/UK real GDP index (FRED OECD, 1971-1995)",
+      "eu_gdp": "FRED CLVMNACSCAB1GQEA19 (Eurostat, 1995+)"
+    },
+    "eu_fallback": "Pre-1956: US CPI used as EU inflation proxy. Pre-1971: US GDP used as EU growth proxy.",
+    "validation": {
+      "blend_cpi_vs_hicp_corr": "0.98 (annual, 1997-2025)",
+      "blend_gdp_vs_eu_gdp_corr": "0.97 (annual, 1996-2023)"
+    }
+  },
+  "us": {
+    "1950": {
+      "q": "Q2",
+      "gdp": 13.4,
+      "infl": 5.8
+    },
+    "1951": {
+      "q": "Q2",
+      "gdp": 5.5,
+      "infl": 6.0
+    },
+    "1952": {
+      "q": "Q1",
+      "gdp": 5.4,
+      "infl": 0.9
+    },
+    "1953": {
+      "q": "Q3",
+      "gdp": 0.5,
+      "infl": 0.6
+    },
+    "1954": {
+      "q": "Q3",
+      "gdp": 2.7,
+      "infl": -0.4
+    },
+    "1955": {
+      "q": "Q1",
+      "gdp": 6.6,
+      "infl": 0.4
+    },
+    "1956": {
+      "q": "Q3",
+      "gdp": 2.0,
+      "infl": 2.8
+    },
+    "1957": {
+      "q": "Q4",
+      "gdp": 0.4,
+      "infl": 3.0
+    },
+    "1958": {
+      "q": "Q3",
+      "gdp": 2.7,
+      "infl": 1.8
+    },
+    "1959": {
+      "q": "Q1",
+      "gdp": 4.6,
+      "infl": 1.5
+    },
+    "1960": {
+      "q": "Q3",
+      "gdp": 0.9,
+      "infl": 1.4
+    },
+    "1961": {
+      "q": "Q1",
+      "gdp": 6.4,
+      "infl": 0.7
+    },
+    "1962": {
+      "q": "Q1",
+      "gdp": 4.3,
+      "infl": 1.2
+    },
+    "1963": {
+      "q": "Q1",
+      "gdp": 5.2,
+      "infl": 1.6
+    },
+    "1964": {
+      "q": "Q1",
+      "gdp": 5.2,
+      "infl": 1.2
+    },
+    "1965": {
+      "q": "Q1",
+      "gdp": 8.5,
+      "infl": 1.9
+    },
+    "1966": {
+      "q": "Q2",
+      "gdp": 4.5,
+      "infl": 3.4
+    },
+    "1967": {
+      "q": "Q4",
+      "gdp": 2.7,
+      "infl": 3.3
+    },
+    "1968": {
+      "q": "Q2",
+      "gdp": 5.0,
+      "infl": 4.7
+    },
+    "1969": {
+      "q": "Q4",
+      "gdp": 2.0,
+      "infl": 5.9
+    },
+    "1970": {
+      "q": "Q4",
+      "gdp": -0.2,
+      "infl": 5.6
+    },
+    "1971": {
+      "q": "Q2",
+      "gdp": 4.4,
+      "infl": 3.3
+    },
+    "1972": {
+      "q": "Q2",
+      "gdp": 6.9,
+      "infl": 3.4
+    },
+    "1973": {
+      "q": "Q2",
+      "gdp": 4.0,
+      "infl": 8.9
+    },
+    "1974": {
+      "q": "Q4",
+      "gdp": -1.9,
+      "infl": 12.1
+    },
+    "1975": {
+      "q": "Q4",
+      "gdp": 2.6,
+      "infl": 7.1
+    },
+    "1976": {
+      "q": "Q2",
+      "gdp": 4.3,
+      "infl": 5.0
+    },
+    "1977": {
+      "q": "Q2",
+      "gdp": 5.0,
+      "infl": 6.7
+    },
+    "1978": {
+      "q": "Q2",
+      "gdp": 6.7,
+      "infl": 9.0
+    },
+    "1979": {
+      "q": "Q4",
+      "gdp": 1.3,
+      "infl": 13.3
+    },
+    "1980": {
+      "q": "Q4",
+      "gdp": -0.0,
+      "infl": 12.4
+    },
+    "1981": {
+      "q": "Q4",
+      "gdp": 1.3,
+      "infl": 8.9
+    },
+    "1982": {
+      "q": "Q4",
+      "gdp": -1.4,
+      "infl": 3.8
+    },
+    "1983": {
+      "q": "Q2",
+      "gdp": 7.9,
+      "infl": 3.8
+    },
+    "1984": {
+      "q": "Q2",
+      "gdp": 5.6,
+      "infl": 4.0
+    },
+    "1985": {
+      "q": "Q2",
+      "gdp": 4.2,
+      "infl": 3.8
+    },
+    "1986": {
+      "q": "Q3",
+      "gdp": 2.9,
+      "infl": 1.2
+    },
+    "1987": {
+      "q": "Q2",
+      "gdp": 4.5,
+      "infl": 4.3
+    },
+    "1988": {
+      "q": "Q2",
+      "gdp": 3.8,
+      "infl": 4.4
+    },
+    "1989": {
+      "q": "Q4",
+      "gdp": 2.7,
+      "infl": 4.6
+    },
+    "1990": {
+      "q": "Q4",
+      "gdp": 0.6,
+      "infl": 6.3
+    },
+    "1991": {
+      "q": "Q4",
+      "gdp": 1.2,
+      "infl": 3.0
+    },
+    "1992": {
+      "q": "Q2",
+      "gdp": 4.4,
+      "infl": 3.0
+    },
+    "1993": {
+      "q": "Q3",
+      "gdp": 2.6,
+      "infl": 2.8
+    },
+    "1994": {
+      "q": "Q1",
+      "gdp": 4.1,
+      "infl": 2.6
+    },
+    "1995": {
+      "q": "Q3",
+      "gdp": 2.2,
+      "infl": 2.5
+    },
+    "1996": {
+      "q": "Q2",
+      "gdp": 4.4,
+      "infl": 3.4
+    },
+    "1997": {
+      "q": "Q1",
+      "gdp": 4.5,
+      "infl": 1.7
+    },
+    "1998": {
+      "q": "Q1",
+      "gdp": 4.9,
+      "infl": 1.6
+    },
+    "1999": {
+      "q": "Q1",
+      "gdp": 4.8,
+      "infl": 2.7
+    },
+    "2000": {
+      "q": "Q4",
+      "gdp": 2.9,
+      "infl": 3.4
+    },
+    "2001": {
+      "q": "Q3",
+      "gdp": 0.2,
+      "infl": 1.6
+    },
+    "2002": {
+      "q": "Q3",
+      "gdp": 2.0,
+      "infl": 2.5
+    },
+    "2003": {
+      "q": "Q1",
+      "gdp": 4.3,
+      "infl": 2.0
+    },
+    "2004": {
+      "q": "Q2",
+      "gdp": 3.4,
+      "infl": 3.3
+    },
+    "2005": {
+      "q": "Q2",
+      "gdp": 3.0,
+      "infl": 3.3
+    },
+    "2006": {
+      "q": "Q3",
+      "gdp": 2.6,
+      "infl": 2.5
+    },
+    "2007": {
+      "q": "Q4",
+      "gdp": 2.1,
+      "infl": 4.1
+    },
+    "2008": {
+      "q": "Q3",
+      "gdp": -2.5,
+      "infl": -0.0
+    },
+    "2009": {
+      "q": "Q3",
+      "gdp": 0.1,
+      "infl": 2.8
+    },
+    "2010": {
+      "q": "Q3",
+      "gdp": 2.8,
+      "infl": 1.4
+    },
+    "2011": {
+      "q": "Q4",
+      "gdp": 1.5,
+      "infl": 3.1
+    },
+    "2012": {
+      "q": "Q3",
+      "gdp": 1.6,
+      "infl": 1.8
+    },
+    "2013": {
+      "q": "Q1",
+      "gdp": 3.0,
+      "infl": 1.5
+    },
+    "2014": {
+      "q": "Q3",
+      "gdp": 2.7,
+      "infl": 0.7
+    },
+    "2015": {
+      "q": "Q3",
+      "gdp": 2.1,
+      "infl": 0.6
+    },
+    "2016": {
+      "q": "Q3",
+      "gdp": 2.2,
+      "infl": 2.1
+    },
+    "2017": {
+      "q": "Q1",
+      "gdp": 3.0,
+      "infl": 2.1
+    },
+    "2018": {
+      "q": "Q3",
+      "gdp": 2.1,
+      "infl": 2.0
+    },
+    "2019": {
+      "q": "Q1",
+      "gdp": 3.4,
+      "infl": 2.3
+    },
+    "2020": {
+      "q": "Q3",
+      "gdp": -0.9,
+      "infl": 1.3
+    },
+    "2021": {
+      "q": "Q2",
+      "gdp": 5.8,
+      "infl": 7.2
+    },
+    "2022": {
+      "q": "Q4",
+      "gdp": 1.3,
+      "infl": 6.4
+    },
+    "2023": {
+      "q": "Q2",
+      "gdp": 3.4,
+      "infl": 3.3
+    },
+    "2024": {
+      "q": "Q3",
+      "gdp": 2.4,
+      "infl": 2.9
+    },
+    "2025": {
+      "q": "Q3",
+      "gdp": 2.0,
+      "infl": 2.7
+    }
+  },
+  "eu": {
+    "1950": {
+      "q": "Q2",
+      "gdp": 13.4,
+      "infl": 5.8,
+      "gdp_source": "us_proxy",
+      "infl_source": "us_proxy"
+    },
+    "1951": {
+      "q": "Q2",
+      "gdp": 5.5,
+      "infl": 6.0,
+      "gdp_source": "us_proxy",
+      "infl_source": "us_proxy"
+    },
+    "1952": {
+      "q": "Q1",
+      "gdp": 5.4,
+      "infl": 0.9,
+      "gdp_source": "us_proxy",
+      "infl_source": "us_proxy"
+    },
+    "1953": {
+      "q": "Q3",
+      "gdp": 0.5,
+      "infl": 0.6,
+      "gdp_source": "us_proxy",
+      "infl_source": "us_proxy"
+    },
+    "1954": {
+      "q": "Q3",
+      "gdp": 2.7,
+      "infl": -0.4,
+      "gdp_source": "us_proxy",
+      "infl_source": "us_proxy"
+    },
+    "1955": {
+      "q": "Q1",
+      "gdp": 6.6,
+      "infl": 0.4,
+      "gdp_source": "us_proxy",
+      "infl_source": "us_proxy"
+    },
+    "1956": {
+      "q": "Q4",
+      "gdp": 2.0,
+      "infl": 3.2,
+      "gdp_source": "us_proxy",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1957": {
+      "q": "Q3",
+      "gdp": 0.4,
+      "infl": 2.5,
+      "gdp_source": "us_proxy",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1958": {
+      "q": "Q4",
+      "gdp": 2.7,
+      "infl": 5.8,
+      "gdp_source": "us_proxy",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1959": {
+      "q": "Q1",
+      "gdp": 4.6,
+      "infl": 1.7,
+      "gdp_source": "us_proxy",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1960": {
+      "q": "Q3",
+      "gdp": 0.9,
+      "infl": 2.3,
+      "gdp_source": "us_proxy",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1961": {
+      "q": "Q1",
+      "gdp": 6.4,
+      "infl": 2.5,
+      "gdp_source": "us_proxy",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1962": {
+      "q": "Q2",
+      "gdp": 4.3,
+      "infl": 4.3,
+      "gdp_source": "us_proxy",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1963": {
+      "q": "Q2",
+      "gdp": 5.2,
+      "infl": 4.4,
+      "gdp_source": "us_proxy",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1964": {
+      "q": "Q2",
+      "gdp": 5.2,
+      "infl": 3.7,
+      "gdp_source": "us_proxy",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1965": {
+      "q": "Q2",
+      "gdp": 8.5,
+      "infl": 3.8,
+      "gdp_source": "us_proxy",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1966": {
+      "q": "Q2",
+      "gdp": 4.5,
+      "infl": 3.1,
+      "gdp_source": "us_proxy",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1967": {
+      "q": "Q3",
+      "gdp": 2.7,
+      "infl": 2.7,
+      "gdp_source": "us_proxy",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1968": {
+      "q": "Q2",
+      "gdp": 5.0,
+      "infl": 3.0,
+      "gdp_source": "us_proxy",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1969": {
+      "q": "Q4",
+      "gdp": 2.0,
+      "infl": 4.0,
+      "gdp_source": "us_proxy",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1970": {
+      "q": "Q4",
+      "gdp": -0.2,
+      "infl": 5.0,
+      "gdp_source": "us_proxy",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1971": {
+      "q": "Q2",
+      "gdp": 3.8,
+      "infl": 6.2,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1972": {
+      "q": "Q2",
+      "gdp": 4.4,
+      "infl": 6.1,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1973": {
+      "q": "Q2",
+      "gdp": 5.7,
+      "infl": 8.6,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1974": {
+      "q": "Q4",
+      "gdp": 0.5,
+      "infl": 13.9,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1975": {
+      "q": "Q4",
+      "gdp": -0.9,
+      "infl": 14.8,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1976": {
+      "q": "Q2",
+      "gdp": 3.9,
+      "infl": 11.8,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1977": {
+      "q": "Q2",
+      "gdp": 3.1,
+      "infl": 11.6,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1978": {
+      "q": "Q2",
+      "gdp": 3.5,
+      "infl": 8.1,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1979": {
+      "q": "Q2",
+      "gdp": 3.8,
+      "infl": 10.7,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1980": {
+      "q": "Q4",
+      "gdp": 0.3,
+      "infl": 14.5,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1981": {
+      "q": "Q4",
+      "gdp": 0.4,
+      "infl": 12.4,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1982": {
+      "q": "Q4",
+      "gdp": 1.3,
+      "infl": 10.6,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1983": {
+      "q": "Q2",
+      "gdp": 2.3,
+      "infl": 8.0,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1984": {
+      "q": "Q2",
+      "gdp": 2.2,
+      "infl": 6.5,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1985": {
+      "q": "Q2",
+      "gdp": 2.8,
+      "infl": 5.8,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1986": {
+      "q": "Q1",
+      "gdp": 2.6,
+      "infl": 2.9,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1987": {
+      "q": "Q2",
+      "gdp": 3.1,
+      "infl": 3.1,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1988": {
+      "q": "Q2",
+      "gdp": 4.5,
+      "infl": 3.3,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1989": {
+      "q": "Q2",
+      "gdp": 3.7,
+      "infl": 4.6,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1990": {
+      "q": "Q2",
+      "gdp": 3.0,
+      "infl": 5.1,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1991": {
+      "q": "Q4",
+      "gdp": 1.4,
+      "infl": 5.2,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1992": {
+      "q": "Q4",
+      "gdp": 1.1,
+      "infl": 4.3,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1993": {
+      "q": "Q4",
+      "gdp": 0.2,
+      "infl": 3.4,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1994": {
+      "q": "Q1",
+      "gdp": 2.8,
+      "infl": 2.7,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1995": {
+      "q": "Q1",
+      "gdp": 2.1,
+      "infl": 2.9,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1996": {
+      "q": "Q3",
+      "gdp": 1.6,
+      "infl": 2.6,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1997": {
+      "q": "Q1",
+      "gdp": 2.7,
+      "infl": 1.7,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1998": {
+      "q": "Q1",
+      "gdp": 2.9,
+      "infl": 1.2,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "1999": {
+      "q": "Q1",
+      "gdp": 2.9,
+      "infl": 1.2,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2000": {
+      "q": "Q1",
+      "gdp": 4.0,
+      "infl": 2.2,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2001": {
+      "q": "Q1",
+      "gdp": 2.2,
+      "infl": 2.4,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2002": {
+      "q": "Q3",
+      "gdp": 0.9,
+      "infl": 2.3,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2003": {
+      "q": "Q3",
+      "gdp": 0.7,
+      "infl": 2.1,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2004": {
+      "q": "Q3",
+      "gdp": 2.0,
+      "infl": 2.2,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2005": {
+      "q": "Q3",
+      "gdp": 1.9,
+      "infl": 2.2,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2006": {
+      "q": "Q1",
+      "gdp": 3.4,
+      "infl": 2.2,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2007": {
+      "q": "Q1",
+      "gdp": 3.0,
+      "infl": 2.2,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2008": {
+      "q": "Q4",
+      "gdp": 0.3,
+      "infl": 3.3,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2009": {
+      "q": "Q3",
+      "gdp": -4.4,
+      "infl": 0.3,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2010": {
+      "q": "Q3",
+      "gdp": 2.0,
+      "infl": 1.6,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2011": {
+      "q": "Q3",
+      "gdp": 1.8,
+      "infl": 2.7,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2012": {
+      "q": "Q3",
+      "gdp": -0.9,
+      "infl": 2.5,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2013": {
+      "q": "Q3",
+      "gdp": -0.1,
+      "infl": 1.4,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2014": {
+      "q": "Q3",
+      "gdp": 1.5,
+      "infl": 0.4,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2015": {
+      "q": "Q3",
+      "gdp": 2.0,
+      "infl": 0.2,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2016": {
+      "q": "Q3",
+      "gdp": 1.7,
+      "infl": 0.2,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2017": {
+      "q": "Q1",
+      "gdp": 2.8,
+      "infl": 1.5,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2018": {
+      "q": "Q3",
+      "gdp": 1.7,
+      "infl": 1.8,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2019": {
+      "q": "Q3",
+      "gdp": 1.6,
+      "infl": 1.2,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2020": {
+      "q": "Q3",
+      "gdp": -6.2,
+      "infl": 0.3,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2021": {
+      "q": "Q1",
+      "gdp": 6.6,
+      "infl": 2.6,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2022": {
+      "q": "Q2",
+      "gdp": 3.7,
+      "infl": 8.4,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2023": {
+      "q": "Q4",
+      "gdp": 0.5,
+      "infl": 5.5,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2024": {
+      "q": "Q3",
+      "gdp": 0.8,
+      "infl": 2.4,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    },
+    "2025": {
+      "q": "Q3",
+      "gdp": 1.5,
+      "infl": 2.1,
+      "gdp_source": "blend_de_fr_uk",
+      "infl_source": "blend_de_fr_uk_it"
+    }
+  }
+}

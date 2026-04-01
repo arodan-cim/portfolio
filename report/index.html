@@ -98,6 +98,9 @@
   </button>
 
   <div class="sidebar-label">Analysis</div>
+  <button class="nav-btn" onclick="navigate('regimes')" id="nav-regimes">
+    <span class="nav-icon">🌍</span> Market Regimes
+  </button>
   <button class="nav-btn" onclick="navigate('overview')" id="nav-overview" style="opacity:0.35;cursor:default;">
     <span class="nav-icon">📋</span> Portfolio Overview
   </button>
@@ -122,6 +125,7 @@ let currentPage = 'proxy';
 
 const pages = {
   proxy: 'output/proxy_validation.html',
+  regimes: 'output/market_regimes.html',
 };
 
 function setRegion(region) {
@@ -141,9 +145,9 @@ function navigate(page) {
 
 function loadPage() {
   const url = pages[currentPage];
-  if (url) {
-    document.getElementById('main-frame').src = url + '#' + currentRegion;
-  }
+  if (!url) return;
+  const frame = document.getElementById('main-frame');
+  frame.src = url + '#' + currentRegion;
 }
 </script>
 
