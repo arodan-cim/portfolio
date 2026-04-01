@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proxy Validation</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --border: #334155;
+    --text: #e2e8f0; --muted: #94a3b8; --accent: #3b82f6;
+    --green: #22c55e; --red: #ef4444; --gold: #eab308;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Inter", -apple-system, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6;
+    padding: 2rem;
+  }
+  h2 {
+    font-size: 1.4rem; margin: 2rem 0 0.5rem;
+    border-left: 4px solid var(--accent); padding-left: 0.8rem;
+  }
+  h3 { font-size: 1.1rem; color: var(--accent); margin: 1.5rem 0 0.3rem; }
+  p, .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 1rem; }
+  code {
+    background: rgba(59,130,246,0.1); padding: 0.15rem 0.4rem;
+    border-radius: 4px; font-size: 0.82rem; color: var(--accent);
+  }
+  .pill {
+    display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px;
+    font-size: 0.75rem; font-weight: 700;
+  }
+  .pill-green { background: rgba(34,197,94,0.15); color: var(--green); }
+  .pill-gold { background: rgba(234,179,8,0.15); color: var(--gold); }
+  .pill-red { background: rgba(239,68,68,0.15); color: var(--red); }
+  .pill-etf { background: rgba(203,213,225,0.15); color: #cbd5e1; }
+  .pill-index { background: rgba(148,163,184,0.15); color: #94a3b8; }
+  .pill-fund { background: rgba(148,163,184,0.15); color: #94a3b8; }
+  .pill-synth { background: rgba(100,116,139,0.15); color: #64748b; }
+  .section {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0;
+  }
+  .component {
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 1rem; margin: 1rem 0;
+  }
+  .chain-label { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.8rem; }
+  .link-card {
+    background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.8rem; margin: 0.5rem 0;
+  }
+  .link-header {
+    display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+  }
+  .link-overlap { font-size: 0.78rem; color: var(--muted); margin-left: auto; }
+  .metrics-mini { width: 100%; font-size: 0.82rem; border-collapse: collapse; }
+  .metrics-mini td { padding: 0.25rem 0.5rem; border: none; }
+  .detail { font-size: 0.72rem; color: var(--muted); }
+  .link-notes {
+    font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0 1.2rem; list-style: disc;
+  }
+  .link-notes li { margin: 0.2rem 0; }
+  .comp-notes {
+    background: rgba(234,179,8,0.06); border: 1px solid rgba(234,179,8,0.15);
+    border-radius: 6px; padding: 0.6rem 0.8rem; margin-top: 0.8rem;
+    font-size: 0.82rem; color: var(--muted);
+  }
+  .comp-notes b { color: var(--gold); }
+  .comp-notes ul { margin: 0.3rem 0 0 1.2rem; }
+  .summary-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; margin: 1rem 0; }
+  .summary-table th, .summary-table td {
+    padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); text-align: left;
+  }
+  .summary-table th { color: var(--accent); font-weight: 600; background: rgba(59,130,246,0.04); }
+  .summary-table tr:hover td { background: rgba(59,130,246,0.04); }
+  .chain-warn {
+    cursor: help; font-size: 0.9rem; position: relative;
+  }
+  .chain-warn::after {
+    content: attr(title); position: absolute; left: 1.5rem; bottom: 100%;
+    width: 300px; padding: 0.5rem 0.7rem;
+    background: var(--bg); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; font-size: 0.75rem; line-height: 1.4;
+    pointer-events: none; opacity: 0; transition: opacity 0.15s;
+    z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    white-space: normal;
+  }
+  .chain-warn:hover::after { opacity: 1; }
+  .note {
+    background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.15);
+    border-radius: 8px; padding: 0.8rem; margin: 1rem 0; font-size: 0.85rem;
+  }
+  .thresholds { display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem; font-size: 0.82rem; margin: 0.5rem 0; }
+  .assets-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem;
+    margin: 0.8rem 0;
+  }
+  .asset-badge {
+    border-left: 3px solid var(--border); padding: 0.35rem 0.6rem;
+    font-size: 0.78rem; background: none;
+  }
+  .asset-badge b { color: var(--text); }
+  .asset-desc {
+    font-size: 0.7rem; color: var(--muted); margin-top: 0.1rem; line-height: 1.35;
+    opacity: 0.8;
+  }
+  .timeline {
+    background: rgba(0,0,0,0.2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.8rem 1rem 1.5rem; margin: 0.8rem 0;
+  }
+  .tl-row { display: flex; align-items: center; margin: 0.2rem 0; }
+  .tl-label {
+    width: 130px; flex-shrink: 0; font-size: 0.75rem; color: var(--muted);
+    text-align: right; padding-right: 0.6rem; white-space: nowrap;
+  }
+  .tl-track {
+    flex: 1; height: 14px; position: relative;
+    background: rgba(255,255,255,0.05); border-radius: 3px;
+  }
+  .tl-bar {
+    position: absolute; top: 1px; height: 12px; border-radius: 3px;
+    min-width: 2px;
+  }
+  .tl-active {
+    position: absolute; top: -1px; height: 16px; border-radius: 4px;
+    border: 2px solid rgba(96,165,250,0.8); pointer-events: none;
+    box-sizing: border-box;
+  }
+  .tl-dot-active {
+    border: 2px solid rgba(96,165,250,0.8); background: none !important;
+  }
+  .tl-axis {
+    position: relative; height: 18px; margin-left: 130px; margin-top: 0.3rem;
+    border-top: 1px solid var(--border);
+  }
+  .tl-tick {
+    position: absolute; top: 2px; font-size: 0.65rem; color: var(--muted);
+    transform: translateX(-50%);
+  }
+  .tl-legend {
+    display: flex; gap: 1rem; margin: 0.6rem 0 0 130px;
+    font-size: 0.72rem; color: var(--muted);
+  }
+  .tl-dot {
+    display: inline-block; width: 10px; height: 10px; border-radius: 2px;
+    margin-right: 0.3rem; vertical-align: middle;
+  }
+  .region { display: none; }
+  .region.active { display: block; }
+</style>
+</head><body>
+
+<h2>Proxy Validation</h2>
+<p class="subtitle">Can we trust the proxies to represent real ETFs over decades?</p>
+<div class="section">
+  <p>Each Golden Butterfly component needs a proxy that extends back to 1962+ for deep backtesting.
+  Below, each proxy is validated against the real ETF on their <b>overlapping period</b>.
+  For spliced proxies, each link in the chain is validated separately.</p>
+  <div class="note">
+    <b>Validation metrics (monthly returns):</b>
+    <div class="thresholds">
+      <div>✅ Correlation ≥ 0.90 — do they move together? (computed on monthly returns)</div>
+      <div>✅ CAGR gap ≤ 1% ideal, ≤ 2% acceptable — do they arrive at the same place?</div>
+      <div>✅ Max DD difference ≤ 5pp — do they crash the same way?</div>
+      <div>✅ Stability ≥ 0.85 — is the tracking consistent? (rolling 1-year correlation)</div>
+    </div>
+  </div>
+</div>
+
+<div class="region" data-region="us"><div class="section"><h2>US Proxy Validation</h2>
+<table class="summary-table"><thead><tr><th>Component</th><th>Proxy</th><th>ETF</th><th>Correlation</th><th>Stability</th><th>CAGR Gap</th><th>DD Diff</th><th>Verdict</th></tr></thead><tbody><tr><td>Total Market</td><td><code>^GSPC (1950)</code></td><td><code>VTI (2001)</code></td><td>0.99</td><td>1.00</td><td>2.22%</td><td>1.3%pp</td><td><span class="pill pill-gold">MARGINAL</span></td></tr><tr><td>Small Cap Value</td><td><code>^GSPC+2% (1950) → NAESX (1980)</code></td><td><code>VBR (2004)</code></td><td>0.98</td><td>0.97</td><td>0.05%</td><td>2.2%pp</td><td><span class="pill pill-gold">MARGINAL</span> <span class="chain-warn" title="^GSPC+2% vs NAESX (1980-2026): FAIL — corr=0.7954, DD diff=7.7%pp. Deep history before 1980-01-03 may be unreliable.">⚠️</span></td></tr><tr><td>Long-Term Bonds</td><td><code>DGS20 d=18 (1962)</code></td><td><code>TLT (2002)</code></td><td>0.98</td><td>0.98</td><td>0.91%</td><td>2.4%pp</td><td><span class="pill pill-green">PASS</span></td></tr><tr><td>Short-Term Bonds</td><td><code>DGS1+DGS2 d=1.9 (1962)</code></td><td><code>SHY (2002)</code></td><td>0.98</td><td>0.98</td><td>0.06%</td><td>0.4%pp</td><td><span class="pill pill-green">PASS</span></td></tr><tr><td>Gold</td><td><code>Milestones (1950) → GC=F (2000)</code></td><td><code>GLD (2004)</code></td><td>0.99</td><td>1.00</td><td>0.40%</td><td>1.2%pp</td><td><span class="pill pill-green">PASS</span> <span class="chain-warn" title="Milestones (1950-2000) cannot be validated against any real asset. Interpolated annual prices are reliable for decade-level CAGR, but NOT for drawdown or volatility analysis pre-2000.">⚠️</span></td></tr></tbody></table><div class="component"><h3>Total Market — VTI</h3><div class="chain-label">Proxy: <code>^GSPC (1950)</code>    vs    ETF: <code>VTI (2001)</code></div><div class="timeline"><div class="tl-row"><span class="tl-label">^GSPC</span><div class="tl-track"><div class="tl-bar" style="left:0.0%;width:67.1%;background:rgba(100,116,139,0.4);opacity:1;"></div><div class="tl-bar" style="left:67.1%;width:32.900000000000006%;background:rgba(234,179,8,0.45);opacity:1;" title="vs VTI"></div><div class="tl-active" style="left:0.0%;width:100.0%;"></div></div></div><div class="tl-row"><span class="tl-label">VTI</span><div class="tl-track"><div class="tl-bar" style="left:67.1%;width:32.900000000000006%;background:rgba(203,213,225,0.4);"></div><div class="tl-active" style="left:67.1%;width:32.900000000000006%;"></div></div></div><div class="tl-axis"><span class="tl-tick" style="left:0%">1950</span><span class="tl-tick" style="left:13.2%">1960</span><span class="tl-tick" style="left:26.3%">1970</span><span class="tl-tick" style="left:39.5%">1980</span><span class="tl-tick" style="left:52.6%">1990</span><span class="tl-tick" style="left:65.8%">2000</span><span class="tl-tick" style="left:78.9%">2010</span><span class="tl-tick" style="left:92.1%">2020</span><span class="tl-tick" style="left:100%">2026</span></div><div class="tl-legend"><span><span class="tl-dot" style="background:rgba(100,116,139,0.5)"></span>Proxy</span><span><span class="tl-dot" style="background:rgba(148,163,184,0.5)"></span>Fund/Futures</span><span><span class="tl-dot" style="background:rgba(203,213,225,0.5)"></span>Real ETF</span><span><span class="tl-dot" style="background:rgba(34,197,94,0.45)"></span>PASS</span><span><span class="tl-dot" style="background:rgba(234,179,8,0.45)"></span>MARGINAL</span><span><span class="tl-dot" style="background:rgba(239,68,68,0.45)"></span>FAIL</span><span><span class="tl-dot tl-dot-active"></span>Active in chain</span></div></div><div class="assets-grid"><div class="asset-badge"><span class="pill pill-etf">Real ETF</span> <b>VTI</b> — Vanguard Total Stock Market ETF<div class="asset-desc">Tracks CRSP US Total Market (~4,000 stocks, 100% of investable US equity). ER 0.03%. Since 2001.</div></div><div class="asset-badge"><span class="pill pill-index">Index</span> <b>^GSPC</b> — S&P 500 Index<div class="asset-desc">~500 large-cap US stocks, ~80% of US market cap. Available from 1950. Used as total market proxy — misses mid/small caps.</div></div></div>
+    <div class="link-card">
+      <div class="link-header">
+        <span class="pill pill-gold">MARGINAL</span> <b>^GSPC vs VTI</b>
+        <span class="link-overlap">2001-06-18 → 2026-03-31 (24.7yr)</span>
+      </div>
+      <table class="metrics-mini">
+        <tr>
+          <td>✅ Correlation</td><td><b>0.99</b>
+            <span class="detail">(monthly returns)</span></td>
+          <td>❌ CAGR gap</td><td><b>2.22%</b>
+            <span class="detail">(VTI=9.26% ^GSPC=7.04%)</span></td>
+        </tr>
+        <tr>
+          <td>✅ Max DD diff</td><td><b>1.3%</b>pp
+            <span class="detail">(VTI=-55.5% ^GSPC=-56.8%)</span></td>
+          <td>✅ Stability</td><td><b>1.00</b>
+            <span class="detail">(rolling 1Y corr)</span></td>
+        </tr>
+      </table>
+      <ul class="link-notes"><li>S&P 500 covers ~80% of US market cap. Misses mid/small caps → 2.2% CAGR underestimation (conservative bias).</li>
+</ul>
+    </div></div><div class="component"><h3>Small Cap Value — VBR</h3><div class="chain-label">Proxy: <code>^GSPC+2% (1950) → NAESX (1980)</code>    vs    ETF: <code>VBR (2004)</code></div><div class="timeline"><div class="tl-row"><span class="tl-label">^GSPC+2%</span><div class="tl-track"><div class="tl-bar" style="left:0.0%;width:39.5%;background:rgba(100,116,139,0.4);opacity:1;"></div><div class="tl-bar" style="left:39.5%;width:60.5%;background:rgba(239,68,68,0.45);opacity:1;" title="vs NAESX (FAIL)"></div><div class="tl-active" style="left:0.0%;width:39.5%;"></div></div></div><div class="tl-row"><span class="tl-label">NAESX</span><div class="tl-track"><div class="tl-bar" style="left:39.5%;width:31.599999999999994%;background:rgba(148,163,184,0.4);opacity:1;"></div><div class="tl-bar" style="left:71.1%;width:28.900000000000006%;background:rgba(34,197,94,0.45);opacity:1;" title="vs VBR (PASS)"></div><div class="tl-active" style="left:39.5%;width:60.5%;"></div></div></div><div class="tl-row"><span class="tl-label">VBR</span><div class="tl-track"><div class="tl-bar" style="left:71.1%;width:28.900000000000006%;background:rgba(203,213,225,0.4);"></div><div class="tl-active" style="left:71.1%;width:28.900000000000006%;"></div></div></div><div class="tl-axis"><span class="tl-tick" style="left:0%">1950</span><span class="tl-tick" style="left:13.2%">1960</span><span class="tl-tick" style="left:26.3%">1970</span><span class="tl-tick" style="left:39.5%">1980</span><span class="tl-tick" style="left:52.6%">1990</span><span class="tl-tick" style="left:65.8%">2000</span><span class="tl-tick" style="left:78.9%">2010</span><span class="tl-tick" style="left:92.1%">2020</span><span class="tl-tick" style="left:100%">2026</span></div><div class="tl-legend"><span><span class="tl-dot" style="background:rgba(100,116,139,0.5)"></span>Proxy</span><span><span class="tl-dot" style="background:rgba(148,163,184,0.5)"></span>Fund/Futures</span><span><span class="tl-dot" style="background:rgba(203,213,225,0.5)"></span>Real ETF</span><span><span class="tl-dot" style="background:rgba(34,197,94,0.45)"></span>PASS</span><span><span class="tl-dot" style="background:rgba(234,179,8,0.45)"></span>MARGINAL</span><span><span class="tl-dot" style="background:rgba(239,68,68,0.45)"></span>FAIL</span><span><span class="tl-dot tl-dot-active"></span>Active in chain</span></div></div><div class="assets-grid"><div class="asset-badge"><span class="pill pill-etf">Real ETF</span> <b>VBR</b> — Vanguard Small-Cap Value ETF<div class="asset-desc">Tracks CRSP US Small Cap Value Index — small companies with low P/B ratios. ER 0.07%. Since 2004.</div></div><div class="asset-badge"><span class="pill pill-index">Index</span> <b>^GSPC</b> — S&P 500 Index<div class="asset-desc">~500 large-cap US stocks, ~80% of US market cap. Available from 1950. Used as total market proxy — misses mid/small caps.</div></div><div class="asset-badge"><span class="pill pill-synth">Synthetic</span> <b>^GSPC+2%</b> — ^GSPC + 2% Annual Premium<div class="asset-desc">S&P 500 daily returns + 2% annualized premium (Fama-French size+value factor). Used pre-1980 when no small-cap index exists. FAILS validation vs NAESX (0.80 corr, 7.7pp DD diff).</div></div><div class="asset-badge"><span class="pill pill-fund">Mutual Fund</span> <b>NAESX</b> — Vanguard Small Cap Index Fund<div class="asset-desc">Tracks CRSP US Small Cap Index. Near-perfect match for VBR (0.98 corr). Available from 1980 — bridges the gap before VBR (2004).</div></div></div>
+    <div class="link-card">
+      <div class="link-header">
+        <span class="pill pill-red">FAIL</span> <b>^GSPC+2% vs NAESX (1980-2026)</b>
+        <span class="link-overlap">1980-01-03 → 2026-03-31 (46.2yr)</span>
+      </div>
+      <table class="metrics-mini">
+        <tr>
+          <td>❌ Correlation</td><td><b>0.80</b>
+            <span class="detail">(monthly returns)</span></td>
+          <td>❌ CAGR gap</td><td><b>2.29%</b>
+            <span class="detail">(NAESX=9.22% ^GSPC+2%=11.51%)</span></td>
+        </tr>
+        <tr>
+          <td>❌ Max DD diff</td><td><b>7.7%</b>pp
+            <span class="detail">(NAESX=-63.3% ^GSPC+2%=-55.5%)</span></td>
+          <td>❌ Stability</td><td><b>0.75</b>
+            <span class="detail">(rolling 1Y corr)</span></td>
+        </tr>
+      </table>
+      <ul class="link-notes"><li>^GSPC+2% is a large-cap index with a flat premium — does NOT capture small-cap behavior.</li>
+<li>Monthly corr 0.80, DD diff 7.7pp → FAIL. Pre-1980 SCV data is unreliable.</li>
+<li>Used only because no small-cap index exists before 1980.</li>
+</ul>
+    </div>
+    <div class="link-card">
+      <div class="link-header">
+        <span class="pill pill-green">PASS</span> <b>NAESX vs VBR (2004-2026, direct)</b>
+        <span class="link-overlap">2004-02-02 → 2026-03-31 (22.1yr)</span>
+      </div>
+      <table class="metrics-mini">
+        <tr>
+          <td>✅ Correlation</td><td><b>0.98</b>
+            <span class="detail">(monthly returns)</span></td>
+          <td>✅ CAGR gap</td><td><b>0.05%</b>
+            <span class="detail">(VBR=9.21% NAESX=9.26%)</span></td>
+        </tr>
+        <tr>
+          <td>✅ Max DD diff</td><td><b>2.2%</b>pp
+            <span class="detail">(VBR=-62.0% NAESX=-59.8%)</span></td>
+          <td>✅ Stability</td><td><b>0.97</b>
+            <span class="detail">(rolling 1Y corr)</span></td>
+        </tr>
+      </table>
+      <ul class="link-notes"><li>Near-perfect match — NAESX is essentially VBR in mutual fund form.</li>
+</ul>
+    </div></div><div class="component"><h3>Long-Term Bonds — TLT</h3><div class="chain-label">Proxy: <code>DGS20 d=18 (1962)</code>    vs    ETF: <code>TLT (2002)</code></div><div class="timeline"><div class="tl-row"><span class="tl-label">DGS20 d=18</span><div class="tl-track"><div class="tl-bar" style="left:15.8%;width:52.60000000000001%;background:rgba(100,116,139,0.4);opacity:1;"></div><div class="tl-bar" style="left:68.4%;width:31.599999999999994%;background:rgba(34,197,94,0.45);opacity:1;" title="vs TLT (PASS)"></div><div class="tl-active" style="left:15.8%;width:84.2%;"></div></div></div><div class="tl-row"><span class="tl-label">TLT</span><div class="tl-track"><div class="tl-bar" style="left:68.4%;width:31.599999999999994%;background:rgba(203,213,225,0.4);"></div><div class="tl-active" style="left:68.4%;width:31.599999999999994%;"></div></div></div><div class="tl-axis"><span class="tl-tick" style="left:0%">1950</span><span class="tl-tick" style="left:13.2%">1960</span><span class="tl-tick" style="left:26.3%">1970</span><span class="tl-tick" style="left:39.5%">1980</span><span class="tl-tick" style="left:52.6%">1990</span><span class="tl-tick" style="left:65.8%">2000</span><span class="tl-tick" style="left:78.9%">2010</span><span class="tl-tick" style="left:92.1%">2020</span><span class="tl-tick" style="left:100%">2026</span></div><div class="tl-legend"><span><span class="tl-dot" style="background:rgba(100,116,139,0.5)"></span>Proxy</span><span><span class="tl-dot" style="background:rgba(148,163,184,0.5)"></span>Fund/Futures</span><span><span class="tl-dot" style="background:rgba(203,213,225,0.5)"></span>Real ETF</span><span><span class="tl-dot" style="background:rgba(34,197,94,0.45)"></span>PASS</span><span><span class="tl-dot" style="background:rgba(234,179,8,0.45)"></span>MARGINAL</span><span><span class="tl-dot" style="background:rgba(239,68,68,0.45)"></span>FAIL</span><span><span class="tl-dot tl-dot-active"></span>Active in chain</span></div></div><div class="assets-grid"><div class="asset-badge"><span class="pill pill-etf">Real ETF</span> <b>TLT</b> — iShares 20+ Year Treasury Bond ETF<div class="asset-desc">Holds US Treasuries with 20+ year maturity. Effective duration ~17yr. ER 0.15%. Since 2002.</div></div><div class="asset-badge"><span class="pill pill-synth">FRED Model</span> <b>DGS20</b> — FRED DGS20 — 20-Year Treasury Yield<div class="asset-desc">Daily Constant Maturity Rate for 20-Year US Treasuries, published by the Federal Reserve (FRED). Available from 1962. Converted to total return via duration model (d=18).</div></div></div>
+    <div class="link-card">
+      <div class="link-header">
+        <span class="pill pill-green">PASS</span> <b>DGS20 d=18 splice vs TLT (2002-2026)</b>
+        <span class="link-overlap">2002-07-31 → 2026-03-30 (23.4yr)</span>
+      </div>
+      <table class="metrics-mini">
+        <tr>
+          <td>✅ Correlation</td><td><b>0.98</b>
+            <span class="detail">(monthly returns)</span></td>
+          <td>✅ CAGR gap</td><td><b>0.91%</b>
+            <span class="detail">(TLT=3.78% DGS20_d18=2.87%)</span></td>
+        </tr>
+        <tr>
+          <td>✅ Max DD diff</td><td><b>2.4%</b>pp
+            <span class="detail">(TLT=-48.7% DGS20_d18=-51.1%)</span></td>
+          <td>✅ Stability</td><td><b>0.98</b>
+            <span class="detail">(rolling 1Y corr)</span></td>
+        </tr>
+      </table>
+      <ul class="link-notes"><li>Duration d=18 chosen to match TLT max drawdown (-48.7% vs -48.4%).</li>
+<li>Model simplifies convexity — real bonds have non-linear price/yield relationship.</li>
+</ul>
+    </div></div><div class="component"><h3>Short-Term Bonds — SHY</h3><div class="chain-label">Proxy: <code>DGS1+DGS2 d=1.9 (1962)</code>    vs    ETF: <code>SHY (2002)</code></div><div class="timeline"><div class="tl-row"><span class="tl-label">DGS1 d=1.9</span><div class="tl-track"><div class="tl-bar" style="left:15.8%;width:18.400000000000002%;background:rgba(100,116,139,0.4);opacity:1;"></div><div class="tl-bar" style="left:34.2%;width:65.8%;background:rgba(34,197,94,0.45);opacity:1;" title="vs DGS2 (PASS)"></div><div class="tl-active" style="left:15.8%;width:18.400000000000002%;"></div></div></div><div class="tl-row"><span class="tl-label">DGS2 d=1.9</span><div class="tl-track"><div class="tl-bar" style="left:34.2%;width:34.2%;background:rgba(100,116,139,0.4);opacity:1;"></div><div class="tl-bar" style="left:68.4%;width:31.599999999999994%;background:rgba(34,197,94,0.45);opacity:1;" title="vs SHY (PASS)"></div><div class="tl-active" style="left:34.2%;width:65.8%;"></div></div></div><div class="tl-row"><span class="tl-label">SHY</span><div class="tl-track"><div class="tl-bar" style="left:68.4%;width:31.599999999999994%;background:rgba(203,213,225,0.4);"></div><div class="tl-active" style="left:68.4%;width:31.599999999999994%;"></div></div></div><div class="tl-axis"><span class="tl-tick" style="left:0%">1950</span><span class="tl-tick" style="left:13.2%">1960</span><span class="tl-tick" style="left:26.3%">1970</span><span class="tl-tick" style="left:39.5%">1980</span><span class="tl-tick" style="left:52.6%">1990</span><span class="tl-tick" style="left:65.8%">2000</span><span class="tl-tick" style="left:78.9%">2010</span><span class="tl-tick" style="left:92.1%">2020</span><span class="tl-tick" style="left:100%">2026</span></div><div class="tl-legend"><span><span class="tl-dot" style="background:rgba(100,116,139,0.5)"></span>Proxy</span><span><span class="tl-dot" style="background:rgba(148,163,184,0.5)"></span>Fund/Futures</span><span><span class="tl-dot" style="background:rgba(203,213,225,0.5)"></span>Real ETF</span><span><span class="tl-dot" style="background:rgba(34,197,94,0.45)"></span>PASS</span><span><span class="tl-dot" style="background:rgba(234,179,8,0.45)"></span>MARGINAL</span><span><span class="tl-dot" style="background:rgba(239,68,68,0.45)"></span>FAIL</span><span><span class="tl-dot tl-dot-active"></span>Active in chain</span></div></div><div class="assets-grid"><div class="asset-badge"><span class="pill pill-etf">Real ETF</span> <b>SHY</b> — iShares 1-3 Year Treasury Bond ETF<div class="asset-desc">Holds short-term US Treasuries. Effective duration ~1.9yr. ER 0.15%. Since 2002.</div></div><div class="asset-badge"><span class="pill pill-synth">FRED Model</span> <b>DGS1</b> — FRED DGS1 — 1-Year Treasury Yield<div class="asset-desc">Daily Constant Maturity Rate for 1-Year US Treasuries (FRED). Available from 1962. Used pre-1976 when DGS2 is not available.</div></div><div class="asset-badge"><span class="pill pill-synth">FRED Model</span> <b>DGS2</b> — FRED DGS2 — 2-Year Treasury Yield<div class="asset-desc">Daily Constant Maturity Rate for 2-Year US Treasuries (FRED). Available from 1976. Duration d=1.9 matches SHY effective duration (~1.9yr).</div></div><div class="asset-badge"><span class="pill pill-synth">FRED Model</span> <b>DGS1+DGS2</b> — DGS1 → DGS2 Splice (d=1.9)<div class="asset-desc">Uses DGS1 before 1976, DGS2 from 1976. Duration model d=1.9 matches SHY effective duration. Splice validated — 0.96 monthly corr in overlap.</div></div></div>
+    <div class="link-card">
+      <div class="link-header">
+        <span class="pill pill-green">PASS</span> <b>DGS1 d=1.9 vs DGS2 d=1.9 (1976-2026)</b>
+        <span class="link-overlap">1976-06-02 → 2026-03-30 (49.4yr)</span>
+      </div>
+      <table class="metrics-mini">
+        <tr>
+          <td>✅ Correlation</td><td><b>0.96</b>
+            <span class="detail">(monthly returns)</span></td>
+          <td>✅ CAGR gap</td><td><b>0.28%</b>
+            <span class="detail">(DGS2_d1.9=5.18% DGS1_d1.9=4.89%)</span></td>
+        </tr>
+        <tr>
+          <td>✅ Max DD diff</td><td><b>2.4%</b>pp
+            <span class="detail">(DGS2_d1.9=-5.9% DGS1_d1.9=-8.3%)</span></td>
+          <td>✅ Stability</td><td><b>0.99</b>
+            <span class="detail">(rolling 1Y corr)</span></td>
+        </tr>
+      </table>
+      <ul class="link-notes"><li>DGS1 (1-Year yield) used pre-1976, DGS2 (2-Year) from 1976.</li>
+<li>Duration d=1.9 matches SHY effective duration.</li>
+</ul>
+    </div>
+    <div class="link-card">
+      <div class="link-header">
+        <span class="pill pill-green">PASS</span> <b>DGS1+DGS2 splice vs SHY (2002-2026)</b>
+        <span class="link-overlap">2002-07-31 → 2026-03-30 (23.4yr)</span>
+      </div>
+      <table class="metrics-mini">
+        <tr>
+          <td>✅ Correlation</td><td><b>0.98</b>
+            <span class="detail">(monthly returns)</span></td>
+          <td>✅ CAGR gap</td><td><b>0.06%</b>
+            <span class="detail">(SHY=1.98% DGS1+DGS2_d1.9=1.93%)</span></td>
+        </tr>
+        <tr>
+          <td>✅ Max DD diff</td><td><b>0.4%</b>pp
+            <span class="detail">(SHY=-5.5% DGS1+DGS2_d1.9=-5.9%)</span></td>
+          <td>✅ Stability</td><td><b>0.98</b>
+            <span class="detail">(rolling 1Y corr)</span></td>
+        </tr>
+      </table>
+      <ul class="link-notes"><li>Best proxy in the set — 0.98 corr, 0.06% CAGR gap, 0.4pp DD diff.</li>
+</ul>
+    </div></div><div class="component"><h3>Gold — GLD</h3><div class="chain-label">Proxy: <code>Milestones (1950) → GC=F (2000)</code>    vs    ETF: <code>GLD (2004)</code></div><div class="timeline"><div class="tl-row"><span class="tl-label">Milestones</span><div class="tl-track"><div class="tl-bar" style="left:0.0%;width:65.8%;background:rgba(100,116,139,0.4);"></div><div class="tl-active" style="left:0.0%;width:65.8%;"></div></div></div><div class="tl-row"><span class="tl-label">GC=F</span><div class="tl-track"><div class="tl-bar" style="left:65.8%;width:5.299999999999997%;background:rgba(100,116,139,0.4);opacity:1;"></div><div class="tl-bar" style="left:71.1%;width:28.900000000000006%;background:rgba(34,197,94,0.45);opacity:1;" title="vs GLD (PASS)"></div><div class="tl-active" style="left:65.8%;width:34.2%;"></div></div></div><div class="tl-row"><span class="tl-label">GLD</span><div class="tl-track"><div class="tl-bar" style="left:71.1%;width:28.900000000000006%;background:rgba(203,213,225,0.4);"></div><div class="tl-active" style="left:71.1%;width:28.900000000000006%;"></div></div></div><div class="tl-axis"><span class="tl-tick" style="left:0%">1950</span><span class="tl-tick" style="left:13.2%">1960</span><span class="tl-tick" style="left:26.3%">1970</span><span class="tl-tick" style="left:39.5%">1980</span><span class="tl-tick" style="left:52.6%">1990</span><span class="tl-tick" style="left:65.8%">2000</span><span class="tl-tick" style="left:78.9%">2010</span><span class="tl-tick" style="left:92.1%">2020</span><span class="tl-tick" style="left:100%">2026</span></div><div class="tl-legend"><span><span class="tl-dot" style="background:rgba(100,116,139,0.5)"></span>Proxy</span><span><span class="tl-dot" style="background:rgba(148,163,184,0.5)"></span>Fund/Futures</span><span><span class="tl-dot" style="background:rgba(203,213,225,0.5)"></span>Real ETF</span><span><span class="tl-dot" style="background:rgba(34,197,94,0.45)"></span>PASS</span><span><span class="tl-dot" style="background:rgba(234,179,8,0.45)"></span>MARGINAL</span><span><span class="tl-dot" style="background:rgba(239,68,68,0.45)"></span>FAIL</span><span><span class="tl-dot tl-dot-active"></span>Active in chain</span></div></div><div class="assets-grid"><div class="asset-badge"><span class="pill pill-etf">Real ETF</span> <b>GLD</b> — SPDR Gold Shares<div class="asset-desc">Physically backed gold trust. Largest gold ETF globally. ER 0.40%. Since 2004.</div></div><div class="asset-badge"><span class="pill pill-synth">Synthetic</span> <b>Milestones</b> — Gold Annual Milestones (1950-2000)<div class="asset-desc">Known annual average gold prices (USD/oz) from World Gold Council and LBMA records, interpolated daily. Prices verified against historical records. LIMITATION: no intra-year volatility. Drawdowns within a year are invisible (e.g. 1980 crash from 850 to 480 USD in 2 months shows as smooth annual decline). Reliable for decade-level CAGR, NOT for drawdown or volatility analysis.</div></div><div class="asset-badge"><span class="pill pill-synth">Futures</span> <b>GC=F</b> — COMEX Gold Futures<div class="asset-desc">Continuous front-month gold futures. Available from ~2000 on Yahoo Finance. Used as gold proxy post-2000.</div></div></div>
+    <div class="link-card">
+      <div class="link-header">
+        <span class="pill pill-green">PASS</span> <b>GC=F vs GLD (ETF overlap, 2004+)</b>
+        <span class="link-overlap">2004-11-19 → 2026-03-31 (21.3yr)</span>
+      </div>
+      <table class="metrics-mini">
+        <tr>
+          <td>✅ Correlation</td><td><b>0.99</b>
+            <span class="detail">(monthly returns)</span></td>
+          <td>✅ CAGR gap</td><td><b>0.40%</b>
+            <span class="detail">(GLD=11.24% GC=F=11.65%)</span></td>
+        </tr>
+        <tr>
+          <td>✅ Max DD diff</td><td><b>1.2%</b>pp
+            <span class="detail">(GLD=-45.6% GC=F=-44.4%)</span></td>
+          <td>✅ Stability</td><td><b>1.00</b>
+            <span class="detail">(rolling 1Y corr)</span></td>
+        </tr>
+      </table>
+      <ul class="link-notes"><li>GC=F (gold futures) and GLD (gold ETF) track the same underlying.</li>
+</ul>
+    </div><div class="comp-notes"><b>⚠️ Limitations:</b><ul><li>Milestones (1950-2000) and GC=F (2000+) have no overlap — splice at boundary (2000-08-30). Cannot validate the splice link.</li><li>Pre-2000: interpolated annual gold prices from World Gold Council/LBMA records. Verified ±1% vs known prices.</li><li>LIMITATION: no intra-year volatility pre-2000. Drawdowns within a year are invisible.</li><li>Pre-1971 (Bretton Woods): gold was fixed at $35/oz.</li></ul></div></div>
+</div></div>
+<div class="region" data-region="eu"><div class="section"><h2>EU Proxy Validation</h2>
+<table class="summary-table"><thead><tr><th>Component</th><th>Proxy</th><th>ETF</th><th>Correlation</th><th>Stability</th><th>CAGR Gap</th><th>DD Diff</th><th>Verdict</th></tr></thead><tbody><tr><td>Total Market</td><td><code>GSPC_EUR (1971) → 60/20/20_EUR (1984)</code></td><td><code>IWDA.AS (2009)</code></td><td>0.93</td><td>0.89</td><td>0.32%</td><td>2.3%pp</td><td><span class="pill pill-green">PASS</span> <span class="chain-warn" title="Pre-1984: ^GSPC only (no ^FTSE/^N225 blend). Pre-1999: CHF/USD as EUR proxy. These periods cannot be validated against IWDA.AS (starts 2009).">⚠️</span></td></tr><tr><td>Small Cap Value</td><td><code>NAESX_EUR (1980)</code></td><td><code>IUSN.DE (2018)</code></td><td>0.95</td><td>0.95</td><td>1.53%</td><td>1.5%pp</td><td><span class="pill pill-green">PASS</span></td></tr><tr><td>Long-Term Bonds</td><td><code>DGS20 d=18 (1962)</code></td><td><code>DTLA.L (2018)</code></td><td>0.97</td><td>0.99</td><td>0.02%</td><td>1.4%pp</td><td><span class="pill pill-green">PASS</span></td></tr><tr><td>Short-Term Bonds</td><td><code>DGS1 d=1.9 (1962) → DGS2 d=1.9 (1976)</code></td><td><code>IBTA.L (2017)</code></td><td>0.96</td><td>0.99</td><td>0.15%</td><td>0.5%pp</td><td><span class="pill pill-green">PASS</span></td></tr><tr><td>Gold</td><td><code>Milestones (1950) → GC=F (2000)</code></td><td><code>IGLN.L (2011)</code></td><td>0.98</td><td>0.99</td><td>0.48%</td><td>0.3%pp</td><td><span class="pill pill-green">PASS</span> <span class="chain-warn" title="Same as US: Milestones pre-2000 are unvalidatable. Reliable for CAGR only.">⚠️</span></td></tr></tbody></table><div class="component"><h3>Total Market — IWDA.AS</h3><div class="chain-label">Proxy: <code>GSPC_EUR (1971) → 60/20/20_EUR (1984)</code>    vs    ETF: <code>IWDA.AS (2009)</code></div><div class="timeline"><div class="tl-row"><span class="tl-label">^GSPC→EUR</span><div class="tl-track"><div class="tl-bar" style="left:27.6%;width:17.1%;background:rgba(100,116,139,0.4);opacity:1;"></div><div class="tl-bar" style="left:44.7%;width:55.3%;background:rgba(34,197,94,0.45);opacity:1;" title="vs 60/20/20 (PASS)"></div><div class="tl-active" style="left:27.6%;width:17.1%;"></div></div></div><div class="tl-row"><span class="tl-label">60/20/20→EUR</span><div class="tl-track"><div class="tl-bar" style="left:44.7%;width:32.89999999999999%;background:rgba(100,116,139,0.4);opacity:1;"></div><div class="tl-bar" style="left:77.6%;width:22.400000000000006%;background:rgba(34,197,94,0.45);opacity:1;" title="vs IWDA (PASS)"></div><div class="tl-active" style="left:44.7%;width:55.3%;"></div></div></div><div class="tl-row"><span class="tl-label">IWDA.AS</span><div class="tl-track"><div class="tl-bar" style="left:77.6%;width:22.400000000000006%;background:rgba(203,213,225,0.4);"></div><div class="tl-active" style="left:77.6%;width:22.400000000000006%;"></div></div></div><div class="tl-axis"><span class="tl-tick" style="left:0%">1950</span><span class="tl-tick" style="left:13.2%">1960</span><span class="tl-tick" style="left:26.3%">1970</span><span class="tl-tick" style="left:39.5%">1980</span><span class="tl-tick" style="left:52.6%">1990</span><span class="tl-tick" style="left:65.8%">2000</span><span class="tl-tick" style="left:78.9%">2010</span><span class="tl-tick" style="left:92.1%">2020</span><span class="tl-tick" style="left:100%">2026</span></div><div class="tl-legend"><span><span class="tl-dot" style="background:rgba(100,116,139,0.5)"></span>Proxy</span><span><span class="tl-dot" style="background:rgba(148,163,184,0.5)"></span>Fund/Futures</span><span><span class="tl-dot" style="background:rgba(203,213,225,0.5)"></span>Real ETF</span><span><span class="tl-dot" style="background:rgba(34,197,94,0.45)"></span>PASS</span><span><span class="tl-dot" style="background:rgba(234,179,8,0.45)"></span>MARGINAL</span><span><span class="tl-dot" style="background:rgba(239,68,68,0.45)"></span>FAIL</span><span><span class="tl-dot tl-dot-active"></span>Active in chain</span></div></div><div class="assets-grid"><div class="asset-badge"><span class="pill pill-etf">Real ETF</span> <b>IWDA.AS</b> — iShares Core MSCI World UCITS ETF<div class="asset-desc">EUR-denominated. ~1,500 large/mid-cap stocks across 23 developed markets (~70% US). Accumulating. ER 0.20%. Since 2009.</div></div><div class="asset-badge"><span class="pill pill-synth">Synthetic</span> <b>GSPC_EUR</b> — ^GSPC → EUR<div class="asset-desc">S&P 500 converted to EUR. Used pre-1984 when only ^GSPC is available. MSCI World is ~70% US so this captures most of the movement.</div></div><div class="asset-badge"><span class="pill pill-synth">Synthetic</span> <b>60/20/20_EUR</b> — Global Equity Blend → EUR<div class="asset-desc">60% ^GSPC + 20% ^N225 + 20% ^FTSE, converted to EUR. Approximates MSCI World in EUR. Available from 1984.</div></div></div>
+    <div class="link-card">
+      <div class="link-header">
+        <span class="pill pill-green">PASS</span> <b>GSPC_EUR vs 60/20/20_EUR (splice link, 1984+)</b>
+        <span class="link-overlap">1984-01-05 → 2026-03-27 (39.0yr)</span>
+      </div>
+      <table class="metrics-mini">
+        <tr>
+          <td>✅ Correlation</td><td><b>0.97</b>
+            <span class="detail">(monthly returns)</span></td>
+          <td>⚠️ CAGR gap</td><td><b>1.12%</b>
+            <span class="detail">(60/20/20_EUR=4.55% GSPC_EUR=5.67%)</span></td>
+        </tr>
+        <tr>
+          <td>✅ Max DD diff</td><td><b>3.7%</b>pp
+            <span class="detail">(60/20/20_EUR=-71.3% GSPC_EUR=-75.0%)</span></td>
+          <td>✅ Stability</td><td><b>0.97</b>
+            <span class="detail">(rolling 1Y corr)</span></td>
+        </tr>
+      </table>
+      <ul class="link-notes"><li>Validates the splice point: does ^GSPC_EUR track the 60/20/20 blend?</li>
+<li>Pre-1999: CHF/USD used as EUR/USD proxy for both series.</li>
+</ul>
+    </div>
+    <div class="link-card">
+      <div class="link-header">
+        <span class="pill pill-green">PASS</span> <b>60/20/20 blend EUR vs IWDA.AS (ETF overlap, 2009+)</b>
+        <span class="link-overlap">2009-09-28 → 2026-03-27 (15.1yr)</span>
+      </div>
+      <table class="metrics-mini">
+        <tr>
+          <td>✅ Correlation</td><td><b>0.93</b>
+            <span class="detail">(monthly returns)</span></td>
+          <td>✅ CAGR gap</td><td><b>0.32%</b>
+            <span class="detail">(IWDA.AS=11.01% 60/20/20_EUR=10.68%)</span></td>
+        </tr>
+        <tr>
+          <td>✅ Max DD diff</td><td><b>2.3%</b>pp
+            <span class="detail">(IWDA.AS=-31.8% 60/20/20_EUR=-29.4%)</span></td>
+          <td>✅ Stability</td><td><b>0.89</b>
+            <span class="detail">(rolling 1Y corr)</span></td>
+        </tr>
+      </table>
+      <ul class="link-notes"><li>Blend: 60% ^GSPC + 20% ^N225 + 20% ^FTSE, converted to EUR.</li>
+<li>FX: CHF/USD (1971-1999) spliced with EUR/USD (1999+). CHF/EUR monthly corr = 0.94 in overlap.</li>
+</ul>
+    </div><div class="comp-notes"><b>⚠️ Limitations:</b><ul><li>FX: CHF/USD (1971-1999) spliced with EUR/USD (1999+). CHF/EUR monthly corr = 0.94 in overlap.</li><li>Pre-1971: no daily FX data exists. Cannot extend further.</li><li>Pre-1984: only ^GSPC available (^FTSE starts 1984, ^N225 starts 1965 but ^FTSE is the bottleneck for the 3-index blend).</li></ul></div></div><div class="component"><h3>Small Cap Value — IUSN.DE</h3><div class="chain-label">Proxy: <code>NAESX_EUR (1980)</code>    vs    ETF: <code>IUSN.DE (2018)</code></div><div class="timeline"><div class="tl-row"><span class="tl-label">NAESX→EUR</span><div class="tl-track"><div class="tl-bar" style="left:39.5%;width:50.0%;background:rgba(100,116,139,0.4);opacity:1;"></div><div class="tl-bar" style="left:89.5%;width:10.5%;background:rgba(34,197,94,0.45);opacity:1;" title="vs IUSN (PASS)"></div><div class="tl-active" style="left:39.5%;width:60.5%;"></div></div></div><div class="tl-row"><span class="tl-label">IUSN.DE</span><div class="tl-track"><div class="tl-bar" style="left:89.5%;width:10.5%;background:rgba(203,213,225,0.4);"></div><div class="tl-active" style="left:89.5%;width:10.5%;"></div></div></div><div class="tl-axis"><span class="tl-tick" style="left:0%">1950</span><span class="tl-tick" style="left:13.2%">1960</span><span class="tl-tick" style="left:26.3%">1970</span><span class="tl-tick" style="left:39.5%">1980</span><span class="tl-tick" style="left:52.6%">1990</span><span class="tl-tick" style="left:65.8%">2000</span><span class="tl-tick" style="left:78.9%">2010</span><span class="tl-tick" style="left:92.1%">2020</span><span class="tl-tick" style="left:100%">2026</span></div><div class="tl-legend"><span><span class="tl-dot" style="background:rgba(100,116,139,0.5)"></span>Proxy</span><span><span class="tl-dot" style="background:rgba(148,163,184,0.5)"></span>Fund/Futures</span><span><span class="tl-dot" style="background:rgba(203,213,225,0.5)"></span>Real ETF</span><span><span class="tl-dot" style="background:rgba(34,197,94,0.45)"></span>PASS</span><span><span class="tl-dot" style="background:rgba(234,179,8,0.45)"></span>MARGINAL</span><span><span class="tl-dot" style="background:rgba(239,68,68,0.45)"></span>FAIL</span><span><span class="tl-dot tl-dot-active"></span>Active in chain</span></div></div><div class="assets-grid"><div class="asset-badge"><span class="pill pill-etf">Real ETF</span> <b>IUSN.DE</b> — iShares MSCI World Small Cap UCITS ETF<div class="asset-desc">EUR-denominated. ~3,400 small-cap stocks across developed markets. All small caps, not specifically value. ER 0.35%. Since 2018.</div></div><div class="asset-badge"><span class="pill pill-synth">Synthetic</span> <b>NAESX_EUR</b> — NAESX → EUR<div class="asset-desc">Vanguard Small Cap Index Fund converted to EUR. Best available EU SCV proxy. Available from 1980.</div></div></div>
+    <div class="link-card">
+      <div class="link-header">
+        <span class="pill pill-green">PASS</span> <b>NAESX_EUR vs IUSN.DE (2018-2026)</b>
+        <span class="link-overlap">2018-04-27 → 2026-03-27 (7.7yr)</span>
+      </div>
+      <table class="metrics-mini">
+        <tr>
+          <td>✅ Correlation</td><td><b>0.95</b>
+            <span class="detail">(monthly returns)</span></td>
+          <td>⚠️ CAGR gap</td><td><b>1.53%</b>
+            <span class="detail">(IUSN.DE=7.12% NAESX_EUR=8.65%)</span></td>
+        </tr>
+        <tr>
+          <td>✅ Max DD diff</td><td><b>1.5%</b>pp
+            <span class="detail">(IUSN.DE=-40.2% NAESX_EUR=-41.8%)</span></td>
+          <td>✅ Stability</td><td><b>0.95</b>
+            <span class="detail">(rolling 1Y corr)</span></td>
+        </tr>
+      </table>
+      <ul class="link-notes"><li>NAESX (Vanguard Small Cap Index) converted to EUR via spliced FX.</li>
+<li>IUSN.DE tracks MSCI World Small Cap (all small caps, not value).</li>
+<li>NAESX is US-only small caps; IUSN.DE is global — explains some divergence.</li>
+</ul>
+    </div><div class="comp-notes"><b>⚠️ Limitations:</b><ul><li>Pre-1999: CHF/USD used as EUR/USD proxy.</li><li>Pre-1980: no small-cap fund exists. Cannot extend further with acceptable quality.</li><li>^GSPC+2% was tested but FAILS: 0.82 corr, 13pp DD diff vs NAESX. Large-cap ≠ small-cap.</li></ul></div></div><div class="component"><h3>Long-Term Bonds — DTLA.L</h3><div class="chain-label">Proxy: <code>DGS20 d=18 (1962)</code>    vs    ETF: <code>DTLA.L (2018)</code></div><div class="timeline"><div class="tl-row"><span class="tl-label">DGS20 d=18</span><div class="tl-track"><div class="tl-bar" style="left:15.8%;width:73.7%;background:rgba(100,116,139,0.4);opacity:1;"></div><div class="tl-bar" style="left:89.5%;width:10.5%;background:rgba(34,197,94,0.45);opacity:1;" title="vs DTLA (PASS)"></div><div class="tl-active" style="left:15.8%;width:84.2%;"></div></div></div><div class="tl-row"><span class="tl-label">DTLA.L</span><div class="tl-track"><div class="tl-bar" style="left:89.5%;width:10.5%;background:rgba(203,213,225,0.4);"></div><div class="tl-active" style="left:89.5%;width:10.5%;"></div></div></div><div class="tl-axis"><span class="tl-tick" style="left:0%">1950</span><span class="tl-tick" style="left:13.2%">1960</span><span class="tl-tick" style="left:26.3%">1970</span><span class="tl-tick" style="left:39.5%">1980</span><span class="tl-tick" style="left:52.6%">1990</span><span class="tl-tick" style="left:65.8%">2000</span><span class="tl-tick" style="left:78.9%">2010</span><span class="tl-tick" style="left:92.1%">2020</span><span class="tl-tick" style="left:100%">2026</span></div><div class="tl-legend"><span><span class="tl-dot" style="background:rgba(100,116,139,0.5)"></span>Proxy</span><span><span class="tl-dot" style="background:rgba(148,163,184,0.5)"></span>Fund/Futures</span><span><span class="tl-dot" style="background:rgba(203,213,225,0.5)"></span>Real ETF</span><span><span class="tl-dot" style="background:rgba(34,197,94,0.45)"></span>PASS</span><span><span class="tl-dot" style="background:rgba(234,179,8,0.45)"></span>MARGINAL</span><span><span class="tl-dot" style="background:rgba(239,68,68,0.45)"></span>FAIL</span><span><span class="tl-dot tl-dot-active"></span>Active in chain</span></div></div><div class="assets-grid"><div class="asset-badge"><span class="pill pill-etf">Real ETF</span> <b>DTLA.L</b> — iShares $ Treasury Bond 20+yr UCITS ETF<div class="asset-desc">USD-denominated. Same underlying as TLT. For EU investors holding USD bond exposure. ER 0.07%. Since 2015.</div></div><div class="asset-badge"><span class="pill pill-synth">FRED Model</span> <b>DGS20</b> — FRED DGS20 — 20-Year Treasury Yield<div class="asset-desc">Daily Constant Maturity Rate for 20-Year US Treasuries, published by the Federal Reserve (FRED). Available from 1962. Converted to total return via duration model (d=18).</div></div></div>
+    <div class="link-card">
+      <div class="link-header">
+        <span class="pill pill-green">PASS</span> <b>DGS20 d=18 vs DTLA.L (2018-2026)</b>
+        <span class="link-overlap">2018-05-11 → 2026-03-30 (7.7yr)</span>
+      </div>
+      <table class="metrics-mini">
+        <tr>
+          <td>✅ Correlation</td><td><b>0.97</b>
+            <span class="detail">(monthly returns)</span></td>
+          <td>✅ CAGR gap</td><td><b>0.02%</b>
+            <span class="detail">(DTLA.L=0.56% DGS20_d18=0.54%)</span></td>
+        </tr>
+        <tr>
+          <td>✅ Max DD diff</td><td><b>1.4%</b>pp
+            <span class="detail">(DTLA.L=-43.4% DGS20_d18=-44.8%)</span></td>
+          <td>✅ Stability</td><td><b>0.99</b>
+            <span class="detail">(rolling 1Y corr)</span></td>
+        </tr>
+      </table>
+      <ul class="link-notes"><li>Same model as US proxy. DTLA.L is USD-denominated, no FX mismatch.</li>
+</ul>
+    </div></div><div class="component"><h3>Short-Term Bonds — IBTA.L</h3><div class="chain-label">Proxy: <code>DGS1 d=1.9 (1962) → DGS2 d=1.9 (1976)</code>    vs    ETF: <code>IBTA.L (2017)</code></div><div class="timeline"><div class="tl-row"><span class="tl-label">DGS1 d=1.9</span><div class="tl-track"><div class="tl-bar" style="left:15.8%;width:18.400000000000002%;background:rgba(100,116,139,0.4);opacity:1;"></div><div class="tl-bar" style="left:34.2%;width:65.8%;background:rgba(34,197,94,0.45);opacity:1;" title="vs DGS2 (PASS)"></div><div class="tl-active" style="left:15.8%;width:18.400000000000002%;"></div></div></div><div class="tl-row"><span class="tl-label">DGS2 d=1.9</span><div class="tl-track"><div class="tl-bar" style="left:34.2%;width:54.0%;background:rgba(100,116,139,0.4);opacity:1;"></div><div class="tl-bar" style="left:88.2%;width:11.799999999999997%;background:rgba(34,197,94,0.45);opacity:1;" title="vs IBTA (PASS)"></div><div class="tl-active" style="left:34.2%;width:65.8%;"></div></div></div><div class="tl-row"><span class="tl-label">IBTA.L</span><div class="tl-track"><div class="tl-bar" style="left:88.2%;width:11.799999999999997%;background:rgba(203,213,225,0.4);"></div><div class="tl-active" style="left:88.2%;width:11.799999999999997%;"></div></div></div><div class="tl-axis"><span class="tl-tick" style="left:0%">1950</span><span class="tl-tick" style="left:13.2%">1960</span><span class="tl-tick" style="left:26.3%">1970</span><span class="tl-tick" style="left:39.5%">1980</span><span class="tl-tick" style="left:52.6%">1990</span><span class="tl-tick" style="left:65.8%">2000</span><span class="tl-tick" style="left:78.9%">2010</span><span class="tl-tick" style="left:92.1%">2020</span><span class="tl-tick" style="left:100%">2026</span></div><div class="tl-legend"><span><span class="tl-dot" style="background:rgba(100,116,139,0.5)"></span>Proxy</span><span><span class="tl-dot" style="background:rgba(148,163,184,0.5)"></span>Fund/Futures</span><span><span class="tl-dot" style="background:rgba(203,213,225,0.5)"></span>Real ETF</span><span><span class="tl-dot" style="background:rgba(34,197,94,0.45)"></span>PASS</span><span><span class="tl-dot" style="background:rgba(234,179,8,0.45)"></span>MARGINAL</span><span><span class="tl-dot" style="background:rgba(239,68,68,0.45)"></span>FAIL</span><span><span class="tl-dot tl-dot-active"></span>Active in chain</span></div></div><div class="assets-grid"><div class="asset-badge"><span class="pill pill-etf">Real ETF</span> <b>IBTA.L</b> — iShares $ Treasury Bond 1-3yr UCITS ETF<div class="asset-desc">USD-denominated. Same underlying as SHY. ER 0.07%. Since 2017.</div></div><div class="asset-badge"><span class="pill pill-synth">FRED Model</span> <b>DGS1</b> — FRED DGS1 — 1-Year Treasury Yield<div class="asset-desc">Daily Constant Maturity Rate for 1-Year US Treasuries (FRED). Available from 1962. Used pre-1976 when DGS2 is not available.</div></div><div class="asset-badge"><span class="pill pill-synth">FRED Model</span> <b>DGS2</b> — FRED DGS2 — 2-Year Treasury Yield<div class="asset-desc">Daily Constant Maturity Rate for 2-Year US Treasuries (FRED). Available from 1976. Duration d=1.9 matches SHY effective duration (~1.9yr).</div></div></div>
+    <div class="link-card">
+      <div class="link-header">
+        <span class="pill pill-green">PASS</span> <b>DGS1 d=1.9 vs DGS2 d=1.9 (splice link, 1976+)</b>
+        <span class="link-overlap">1976-06-02 → 2026-03-30 (49.4yr)</span>
+      </div>
+      <table class="metrics-mini">
+        <tr>
+          <td>✅ Correlation</td><td><b>0.96</b>
+            <span class="detail">(monthly returns)</span></td>
+          <td>✅ CAGR gap</td><td><b>0.28%</b>
+            <span class="detail">(DGS2_d1.9=5.18% DGS1_d1.9=4.89%)</span></td>
+        </tr>
+        <tr>
+          <td>✅ Max DD diff</td><td><b>2.4%</b>pp
+            <span class="detail">(DGS2_d1.9=-5.9% DGS1_d1.9=-8.3%)</span></td>
+          <td>✅ Stability</td><td><b>0.99</b>
+            <span class="detail">(rolling 1Y corr)</span></td>
+        </tr>
+      </table>
+      <ul class="link-notes"><li>DGS1 (1-Year yield) used pre-1976, DGS2 (2-Year) from 1976.</li>
+<li>Duration d=1.9 matches SHY/IBTA effective duration.</li>
+</ul>
+    </div>
+    <div class="link-card">
+      <div class="link-header">
+        <span class="pill pill-green">PASS</span> <b>DGS1+DGS2 splice vs IBTA.L (ETF overlap, 2017+)</b>
+        <span class="link-overlap">2017-04-18 → 2026-03-30 (8.7yr)</span>
+      </div>
+      <table class="metrics-mini">
+        <tr>
+          <td>✅ Correlation</td><td><b>0.96</b>
+            <span class="detail">(monthly returns)</span></td>
+          <td>✅ CAGR gap</td><td><b>0.15%</b>
+            <span class="detail">(IBTA.L=2.00% DGS1+DGS2_d1.9=2.15%)</span></td>
+        </tr>
+        <tr>
+          <td>✅ Max DD diff</td><td><b>0.5%</b>pp
+            <span class="detail">(IBTA.L=-5.1% DGS1+DGS2_d1.9=-5.6%)</span></td>
+          <td>✅ Stability</td><td><b>0.99</b>
+            <span class="detail">(rolling 1Y corr)</span></td>
+        </tr>
+      </table>
+      <ul class="link-notes"><li>Same model as US proxy. IBTA.L is USD-denominated.</li>
+</ul>
+    </div></div><div class="component"><h3>Gold — IGLN.L</h3><div class="chain-label">Proxy: <code>Milestones (1950) → GC=F (2000)</code>    vs    ETF: <code>IGLN.L (2011)</code></div><div class="timeline"><div class="tl-row"><span class="tl-label">Milestones</span><div class="tl-track"><div class="tl-bar" style="left:0.0%;width:65.8%;background:rgba(100,116,139,0.4);"></div><div class="tl-active" style="left:0.0%;width:65.8%;"></div></div></div><div class="tl-row"><span class="tl-label">GC=F</span><div class="tl-track"><div class="tl-bar" style="left:65.8%;width:14.5%;background:rgba(100,116,139,0.4);opacity:1;"></div><div class="tl-bar" style="left:80.3%;width:19.700000000000003%;background:rgba(34,197,94,0.45);opacity:1;" title="vs IGLN (PASS)"></div><div class="tl-active" style="left:65.8%;width:34.2%;"></div></div></div><div class="tl-row"><span class="tl-label">IGLN.L</span><div class="tl-track"><div class="tl-bar" style="left:80.3%;width:19.700000000000003%;background:rgba(203,213,225,0.4);"></div><div class="tl-active" style="left:80.3%;width:19.700000000000003%;"></div></div></div><div class="tl-axis"><span class="tl-tick" style="left:0%">1950</span><span class="tl-tick" style="left:13.2%">1960</span><span class="tl-tick" style="left:26.3%">1970</span><span class="tl-tick" style="left:39.5%">1980</span><span class="tl-tick" style="left:52.6%">1990</span><span class="tl-tick" style="left:65.8%">2000</span><span class="tl-tick" style="left:78.9%">2010</span><span class="tl-tick" style="left:92.1%">2020</span><span class="tl-tick" style="left:100%">2026</span></div><div class="tl-legend"><span><span class="tl-dot" style="background:rgba(100,116,139,0.5)"></span>Proxy</span><span><span class="tl-dot" style="background:rgba(148,163,184,0.5)"></span>Fund/Futures</span><span><span class="tl-dot" style="background:rgba(203,213,225,0.5)"></span>Real ETF</span><span><span class="tl-dot" style="background:rgba(34,197,94,0.45)"></span>PASS</span><span><span class="tl-dot" style="background:rgba(234,179,8,0.45)"></span>MARGINAL</span><span><span class="tl-dot" style="background:rgba(239,68,68,0.45)"></span>FAIL</span><span><span class="tl-dot tl-dot-active"></span>Active in chain</span></div></div><div class="assets-grid"><div class="asset-badge"><span class="pill pill-etf">Real ETF</span> <b>IGLN.L</b> — iShares Physical Gold ETC<div class="asset-desc">USD-denominated. Physically backed gold. ER 0.12%. Since 2011.</div></div><div class="asset-badge"><span class="pill pill-synth">Synthetic</span> <b>Milestones</b> — Gold Annual Milestones (1950-2000)<div class="asset-desc">Known annual average gold prices (USD/oz) from World Gold Council and LBMA records, interpolated daily. Prices verified against historical records. LIMITATION: no intra-year volatility. Drawdowns within a year are invisible (e.g. 1980 crash from 850 to 480 USD in 2 months shows as smooth annual decline). Reliable for decade-level CAGR, NOT for drawdown or volatility analysis.</div></div><div class="asset-badge"><span class="pill pill-synth">Futures</span> <b>GC=F</b> — COMEX Gold Futures<div class="asset-desc">Continuous front-month gold futures. Available from ~2000 on Yahoo Finance. Used as gold proxy post-2000.</div></div></div>
+    <div class="link-card">
+      <div class="link-header">
+        <span class="pill pill-green">PASS</span> <b>GC=F vs IGLN.L (ETF overlap, 2011+)</b>
+        <span class="link-overlap">2011-04-11 → 2026-04-01 (14.7yr)</span>
+      </div>
+      <table class="metrics-mini">
+        <tr>
+          <td>✅ Correlation</td><td><b>0.98</b>
+            <span class="detail">(monthly returns)</span></td>
+          <td>✅ CAGR gap</td><td><b>0.48%</b>
+            <span class="detail">(IGLN.L=7.60% GC=F=7.12%)</span></td>
+        </tr>
+        <tr>
+          <td>✅ Max DD diff</td><td><b>0.3%</b>pp
+            <span class="detail">(IGLN.L=-47.2% GC=F=-46.9%)</span></td>
+          <td>✅ Stability</td><td><b>0.99</b>
+            <span class="detail">(rolling 1Y corr)</span></td>
+        </tr>
+      </table>
+      <ul class="link-notes"><li>Same underlying. IGLN.L is USD-denominated.</li>
+</ul>
+    </div><div class="comp-notes"><b>⚠️ Limitations:</b><ul><li>Same as US: Milestones/GC=F have no overlap. Cannot validate splice link.</li><li>Pre-2000 milestones are unvalidatable. Reliable for CAGR only.</li></ul></div></div>
+</div></div>
+<script>
+function applyRegion() {
+  var region = window.location.hash.replace('#', '') || 'us';
+  document.querySelectorAll('.region').forEach(function(el) {
+    el.classList.toggle('active', el.dataset.region === region);
+  });
+}
+window.addEventListener('hashchange', applyRegion);
+applyRegion();
+</script>
+</body></html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Golden Butterfly Portfolio</title>
+<style>
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --border: #334155;
+    --text: #e2e8f0; --muted: #94a3b8; --accent: #3b82f6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg); color: var(--text);
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+  }
+
+  /* Top bar */
+  .topbar {
+    grid-column: 1 / -1;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.6rem 1.2rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .topbar h1 { font-size: 1.2rem; font-weight: 700; }
+  .region-toggle {
+    display: flex; gap: 0.3rem;
+  }
+  .region-btn {
+    display: flex; align-items: center; gap: 0.4rem;
+    padding: 0.35rem 1.2rem; border: 2px solid var(--border); border-radius: 99px;
+    background: var(--surface); color: var(--muted); font-size: 0.85rem;
+    font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .region-btn:hover { border-color: var(--accent); color: var(--text); }
+  .region-btn.active {
+    background: rgba(59,130,246,0.15); color: var(--text);
+    border-color: var(--accent); box-shadow: 0 0 10px rgba(59,130,246,0.2);
+  }
+  .region-flag { font-size: 1.3rem; line-height: 1; }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 1rem 0;
+    overflow-y: auto;
+  }
+  .sidebar-label {
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted); padding: 0.8rem 1rem 0.3rem;
+  }
+  .nav-btn {
+    display: block; width: 100%; text-align: left;
+    padding: 0.55rem 1rem; border: none; background: none;
+    color: var(--muted); font-size: 0.85rem; cursor: pointer;
+    transition: all 0.15s; border-left: 3px solid transparent;
+  }
+  .nav-btn:hover { color: var(--text); background: rgba(59,130,246,0.04); }
+  .nav-btn.active {
+    color: var(--accent); background: rgba(59,130,246,0.08);
+    border-left-color: var(--accent); font-weight: 600;
+  }
+  .nav-icon { margin-right: 0.4rem; }
+
+  /* Content */
+  .content {
+    overflow: hidden;
+  }
+  .content iframe {
+    width: 100%; height: 100%; border: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>🦋 Golden Butterfly Portfolio</h1>
+  <div class="region-toggle">
+    <button class="region-btn active" id="btn-us" onclick="setRegion('us')">
+      <span class="region-flag">🇺🇸</span> US
+    </button>
+    <button class="region-btn" id="btn-eu" onclick="setRegion('eu')">
+      <span class="region-flag">🇪🇺</span> EU
+    </button>
+  </div>
+</div>
+
+<nav class="sidebar">
+  <div class="sidebar-label">Validation</div>
+  <button class="nav-btn active" onclick="navigate('proxy')" id="nav-proxy">
+    <span class="nav-icon">📊</span> Proxy Validation
+  </button>
+
+  <div class="sidebar-label">Analysis</div>
+  <button class="nav-btn" onclick="navigate('overview')" id="nav-overview" style="opacity:0.35;cursor:default;">
+    <span class="nav-icon">📋</span> Portfolio Overview
+  </button>
+  <button class="nav-btn" onclick="navigate('returns')" id="nav-returns" style="opacity:0.35;cursor:default;">
+    <span class="nav-icon">📈</span> Returns & Drawdowns
+  </button>
+  <button class="nav-btn" onclick="navigate('decades')" id="nav-decades" style="opacity:0.35;cursor:default;">
+    <span class="nav-icon">📅</span> Per-Decade
+  </button>
+  <button class="nav-btn" onclick="navigate('methodology')" id="nav-methodology" style="opacity:0.35;cursor:default;">
+    <span class="nav-icon">🔧</span> Methodology
+  </button>
+</nav>
+
+<div class="content">
+  <iframe id="main-frame" src="output/proxy_validation.html#us"></iframe>
+</div>
+
+<script>
+let currentRegion = 'us';
+let currentPage = 'proxy';
+
+const pages = {
+  proxy: 'output/proxy_validation.html',
+};
+
+function setRegion(region) {
+  currentRegion = region;
+  document.getElementById('btn-us').classList.toggle('active', region === 'us');
+  document.getElementById('btn-eu').classList.toggle('active', region === 'eu');
+  loadPage();
+}
+
+function navigate(page) {
+  if (!pages[page]) return;
+  currentPage = page;
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('nav-' + page).classList.add('active');
+  loadPage();
+}
+
+function loadPage() {
+  const url = pages[currentPage];
+  if (url) {
+    document.getElementById('main-frame').src = url + '#' + currentRegion;
+  }
+}
+</script>
+
+</body>
+</html>

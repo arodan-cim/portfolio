@@ -1,0 +1,15 @@
+{
+  "overlap_start": "2004-11-19",
+  "overlap_end": "2026-03-25",
+  "correlation": 0.9323,
+  "ann_te": 0.0327,
+  "etf_cagr": 0.0791,
+  "proxy_cagr": 0.0781,
+  "component_correlations": {
+    "total_market": 0.9813,
+    "scv": 0.8915,
+    "lt_bonds": 0.8997,
+    "st_bonds": 0.9068,
+    "gold": 0.8843
+  }
+}
