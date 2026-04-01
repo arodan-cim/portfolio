@@ -719,3 +719,62 @@ for label, series in [
 
 pd.DataFrame(proxy_prices).to_pickle(_os.path.join(OUT, 'proxy_prices.pkl'))
 print(f'✅ Saved {_os.path.join(OUT, "proxy_prices.pkl")}')
+
+# Save weekly chart data as JSON for the HTML report
+def _series_to_chart(series, label):
+    s = series.dropna().resample('ME').last().dropna()
+    # Normalize to 100 at start
+    s = s / s.iloc[0] * 100
+    return {'label': label, 'dates': [d.strftime('%Y-%m') for d in s.index], 'values': [round(v, 1) for v in s.values]}
+
+chart_data = {
+    'us': {
+        'total_market': {
+            'proxy': [_series_to_chart(gspc, '^GSPC')],
+            'etf': [_series_to_chart(vti, 'VTI')],
+        },
+        'scv': {
+            'proxy': [_series_to_chart(gspc_scv, '^GSPC+2%'), _series_to_chart(naesx, 'NAESX')],
+            'etf': [_series_to_chart(vbr, 'VBR')],
+        },
+        'lt_bonds': {
+            'proxy': [_series_to_chart(lt_dgs20, 'DGS20 d=18')],
+            'etf': [_series_to_chart(tlt, 'TLT')],
+        },
+        'st_bonds': {
+            'proxy': [_series_to_chart(st_dgs1, 'DGS1 d=1.9'), _series_to_chart(st_dgs2, 'DGS2 d=1.9')],
+            'etf': [_series_to_chart(shy, 'SHY')],
+        },
+        'gold': {
+            'proxy': [_series_to_chart(gold_synth, 'Milestones'), _series_to_chart(gcf, 'GC=F')],
+            'etf': [_series_to_chart(gld, 'GLD')],
+        },
+    },
+    'eu': {
+        'total_market': {
+            'proxy': [_series_to_chart(eu_tm_gspc_eur, 'GSPC_EUR'), _series_to_chart(eu_tm_proxy, '60/20/20_EUR')],
+            'etf': [_series_to_chart(iwda, 'IWDA.AS')],
+        },
+        'scv': {
+            'proxy': [_series_to_chart(eu_scv_proxy, 'NAESX_EUR')],
+            'etf': [_series_to_chart(iusn, 'IUSN.DE')],
+        },
+        'lt_bonds': {
+            'proxy': [_series_to_chart(lt_dgs20, 'DGS20 d=18')],
+            'etf': [_series_to_chart(dtla, 'DTLA.L')],
+        },
+        'st_bonds': {
+            'proxy': [_series_to_chart(st_dgs1, 'DGS1 d=1.9'), _series_to_chart(st_dgs2, 'DGS2 d=1.9')],
+            'etf': [_series_to_chart(ibta, 'IBTA.L')],
+        },
+        'gold': {
+            'proxy': [_series_to_chart(gold_synth, 'Milestones'), _series_to_chart(gcf, 'GC=F')],
+            'etf': [_series_to_chart(igln, 'IGLN.L')],
+        },
+    },
+}
+
+chart_path = _os.path.join(OUT, 'proxy_chart_data.json')
+with open(chart_path, 'w') as f:
+    _json.dump(chart_data, f, separators=(',', ':'))
+print(f'✅ Saved {chart_path} ({_os.path.getsize(chart_path)//1024} KB)')

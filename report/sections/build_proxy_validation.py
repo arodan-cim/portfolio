@@ -11,6 +11,9 @@ DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'out
 with open(os.path.join(DATA, 'proxy_validation.json')) as f:
     results = json.load(f)
 
+with open(os.path.join(DATA, 'proxy_chart_data.json')) as f:
+    chart_data = json.load(f)
+
 
 def verdict(v):
     checks = [
@@ -325,6 +328,59 @@ def _comp_verdict_color(data):
     vd, vc = verdict(link)
     return vc
 
+_chart_id = [0]
+def _next_id():
+    _chart_id[0] += 1
+    return f'chart{_chart_id[0]}'
+
+def build_chart(region, comp, mode):
+    """Build a plotly chart div for a component. mode: 'full' or 'overlap'."""
+    cdata = chart_data.get(region, {}).get(comp)
+    if not cdata:
+        return '<p style="color:var(--muted);font-size:0.85rem">No chart data available.</p>'
+
+    links = results[region][comp]['links']
+    overlap_start = links[-1]['start'] if links else None
+
+    series = [dict(s) for s in cdata['proxy'] + cdata['etf']]
+
+    if mode == 'overlap' and overlap_start:
+        trimmed = []
+        for s in series:
+            idx = next((i for i, d in enumerate(s['dates']) if d >= overlap_start[:7]), 0)
+            dates = s['dates'][idx:]
+            vals = s['values'][idx:]
+            if vals:
+                base = vals[0]
+                vals = [round(v / base * 100, 1) for v in vals]
+            trimmed.append({'label': s['label'], 'dates': dates, 'values': vals})
+        series = trimmed
+
+    # Compute drawdown for each series
+    dd_series = []
+    for s in series:
+        vals = s['values']
+        peak = 0
+        dd_vals = []
+        for v in vals:
+            if v > peak:
+                peak = v
+            dd_vals.append(round((v / peak - 1) * 100, 2) if peak > 0 else 0)
+        dd_series.append({'label': s['label'], 'dates': s['dates'], 'values': dd_vals})
+
+    cid = _next_id()
+    etf_label = results[region][comp]['etf']
+    chart_json = json.dumps({'series': series, 'dd': dd_series}, separators=(',', ':'))
+    etf_names = json.dumps([etf_label.split('.')[0]])
+
+    return (
+        '<div class="chart-wrap">'
+        '<div id="' + cid + '" style="width:100%;height:400px;"'
+        ' data-chart=\'' + chart_json + '\' data-etf=\'' + etf_names + '\'></div>'
+        '</div>'
+    )
+
+
 def build_component(region, comp, data):
     """Build HTML for one component."""
     links_html = ''
@@ -369,14 +425,30 @@ def build_component(region, comp, data):
     assets_html = '<div class="assets-grid">' + badges + '</div>' if badges else ''
     notes_html = '<div class="comp-notes"><b>⚠️ Limitations:</b><ul>' + comp_notes + '</ul></div>' if comp_notes else ''
 
+    tid = region + '_' + comp
+    full_chart = build_chart(region, comp, 'full')
+    overlap_chart = build_chart(region, comp, 'overlap')
+
+    tabs_html = (
+        '<div class="tabs" data-tabs="' + tid + '">'
+        '<button class="tab-btn active" onclick="switchTab(\'' + tid + '\',0)">📊 Summary</button>'
+        '<button class="tab-btn" onclick="switchTab(\'' + tid + '\',1)">📈 Full Period</button>'
+        '<button class="tab-btn" onclick="switchTab(\'' + tid + '\',2)">🔍 ETF Overlap</button>'
+        '</div>'
+        '<div class="tab-panels" data-tabs="' + tid + '">'
+        '<div class="tab-panel active">' + links_html + notes_html + '</div>'
+        '<div class="tab-panel">' + full_chart + '</div>'
+        '<div class="tab-panel">' + overlap_chart + '</div>'
+        '</div>'
+    )
+
     return (
         '<div class="component">'
         + '<h3>' + nice.get(comp, comp) + ' — ' + data['etf'] + '</h3>'
         + _build_chain_label(data)
         + build_timeline(region, comp, _comp_verdict_color(data))
         + assets_html
-        + links_html
-        + notes_html
+        + tabs_html
         + '</div>'
     )
 
@@ -634,6 +706,25 @@ CSS = """
   }
   .region { display: none; }
   .region.active { display: block; }
+  /* Tabs */
+  .tabs {
+    display: flex; gap: 0.25rem; margin: 0.8rem 0 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab-btn {
+    padding: 0.35rem 0.9rem; border: none; background: none;
+    color: var(--muted); font-size: 0.8rem; cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .tab-panels { margin-top: 0.6rem; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  .chart-wrap {
+    border-radius: 8px; margin: 0.4rem 0;
+  }
 """
 
 JS = """
@@ -645,6 +736,80 @@ function applyRegion() {
 }
 window.addEventListener('hashchange', applyRegion);
 applyRegion();
+
+function switchTab(tid, idx) {
+  var btns = document.querySelectorAll('.tabs[data-tabs="'+tid+'"] .tab-btn');
+  var panels = document.querySelectorAll('.tab-panels[data-tabs="'+tid+'"] .tab-panel');
+  btns.forEach(function(b,i){ b.classList.toggle('active', i===idx); });
+  panels.forEach(function(p,i){
+    p.classList.toggle('active', i===idx);
+    if (i===idx) {
+      p.querySelectorAll('div[data-chart]').forEach(function(el) {
+        if (!el._drawn) {
+          var d = JSON.parse(el.getAttribute('data-chart'));
+          var e = JSON.parse(el.getAttribute('data-etf'));
+          drawPlotlyChart(el.id, d.series, d.dd, e);
+          el._drawn = true;
+        }
+      });
+    }
+  });
+}
+
+var PROXY_COLORS = ['#64748b','#94a3b8','#b0bec5','#78909c','#546e7a'];
+var ETF_COLOR = '#3b82f6';
+
+function drawPlotlyChart(divId, series, ddSeries, etfLabels) {
+  var traces = [];
+  var proxyIdx = 0;
+
+  series.forEach(function(s) {
+    var isEtf = etfLabels.some(function(e){ return s.label.indexOf(e) >= 0; });
+    var color = isEtf ? ETF_COLOR : PROXY_COLORS[proxyIdx++ % PROXY_COLORS.length];
+    traces.push({
+      x: s.dates, y: s.values, name: s.label,
+      type: 'scatter', mode: 'lines',
+      line: { color: color, width: isEtf ? 2 : 1.2 },
+      opacity: isEtf ? 1 : 0.75,
+      xaxis: 'x', yaxis: 'y',
+      hovertemplate: '<b>%{fullData.name}</b><br>%{x}<br>%{y:.1f}<extra></extra>'
+    });
+  });
+
+  proxyIdx = 0;
+  ddSeries.forEach(function(s) {
+    var isEtf = etfLabels.some(function(e){ return s.label.indexOf(e) >= 0; });
+    var color = isEtf ? ETF_COLOR : PROXY_COLORS[proxyIdx++ % PROXY_COLORS.length];
+    traces.push({
+      x: s.dates, y: s.values, name: s.label,
+      type: 'scatter', mode: 'lines', fill: 'tozeroy',
+      line: { color: color, width: isEtf ? 1.5 : 1 },
+      fillcolor: color.replace(')', ',0.15)').replace('rgb', 'rgba'),
+      opacity: isEtf ? 0.9 : 0.5,
+      xaxis: 'x', yaxis: 'y2',
+      showlegend: false,
+      hovertemplate: '<b>%{fullData.name}</b><br>%{x}<br>%{y:.1f}%<extra></extra>'
+    });
+  });
+
+  var layout = {
+    paper_bgcolor: 'transparent', plot_bgcolor: '#0a1628',
+    font: { family: 'Inter,sans-serif', color: '#94a3b8', size: 11 },
+    margin: { t: 10, r: 20, b: 40, l: 60 },
+    height: 400,
+    grid: { rows: 2, columns: 1, pattern: 'independent', roworder: 'top to bottom' },
+    xaxis:  { domain: [0,1], anchor: 'y',  showgrid: true, gridcolor: '#1e293b', zeroline: false, tickfont: {size:10} },
+    xaxis2: { domain: [0,1], anchor: 'y2', showgrid: true, gridcolor: '#1e293b', zeroline: false, tickfont: {size:10}, matches: 'x' },
+    yaxis:  { domain: [0.35,1],  type: 'log', showgrid: true, gridcolor: '#1e293b', tickfont: {size:10}, title: {text:'Growth (log)', font:{size:10}} },
+    yaxis2: { domain: [0,0.30], showgrid: true, gridcolor: '#1e293b', tickfont: {size:10}, title: {text:'Drawdown %', font:{size:10}}, ticksuffix: '%' },
+    legend: { bgcolor: 'transparent', font: {size: 10}, orientation: 'h', y: -0.08 },
+    hovermode: 'x unified',
+    hoverlabel: { bgcolor: '#1e293b', bordercolor: '#334155', font: {color:'#e2e8f0', size:11} }
+  };
+
+  var config = { displayModeBar: false, responsive: true, doubleClick: 'reset+autosize' };
+  Plotly.newPlot(divId, traces, layout, config);
+}
 """
 
 intro = """
@@ -673,6 +838,7 @@ html_parts = [
     '<meta charset="UTF-8">',
     '<meta name="viewport" content="width=device-width, initial-scale=1.0">',
     '<title>Proxy Validation</title>',
+    '<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>',
     '<style>' + CSS + '</style>',
     '</head><body>',
     intro,
